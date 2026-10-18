@@ -1,0 +1,1 @@
+这是合成简历的只读录制验收。请只调用一次 resume_read，resumeId 为 c607705e-9c63-41b6-9a65-9cb6bdd897e9，elementId 为 bff40b32-bcd0-4a95-9a41-d620a9404522。确认返回的是图片图层，图片地址为 resume-asset 引用，不能输出图片字节。不要调用其他工具，不要修改简历。最后只回复 LIVE_RESUME_REPLAY_OK。

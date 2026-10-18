@@ -1,0 +1,5 @@
+- insert:
+    - id: fast-resume
+      name: dsh-fast-resume
+    - id: fast-resume-tools
+      name: dsh-fast-resume/tools

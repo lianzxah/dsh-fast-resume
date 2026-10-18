@@ -1,0 +1,11 @@
+{
+  "toolNames": [
+    "resume_read"
+  ],
+  "revision": 2,
+  "elementName": "图片",
+  "elementType": "image",
+  "assetReference": "resume-asset:bff40b32-bcd0-4a95-9a41-d620a9404522",
+  "modelCalls": 2,
+  "finish": "LIVE_RESUME_REPLAY_OK"
+}

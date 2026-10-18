@@ -1,0 +1,10 @@
+/node_modules/
+/lib/
+/assets/
+/dist/
+/*.tgz
+/test-results/
+.env
+.env.*
+!.env.example
+.DS_Store

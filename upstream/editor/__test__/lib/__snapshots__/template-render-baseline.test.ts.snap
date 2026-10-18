@@ -1,0 +1,124 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`official template render baseline > keeps the six representative page structures stable 1`] = `
+[
+  {
+    "elementTypes": [
+      {
+        "shape": 5,
+        "text": 14,
+      },
+    ],
+    "id": "template-classic",
+    "pageCount": 1,
+    "pageElementCounts": [
+      19,
+    ],
+    "representativeText": [
+      "张三",
+      "138-0000-0000  |  zhangsan@email.com  |  北京市朝阳区",
+      "个人简介",
+      "5 年前端开发经验，专注于大型 Web 应用架构与性能优化，具备完整的从 0 到 1 产品交付能力，善于团队协作与技术攻坚。",
+    ],
+  },
+  {
+    "elementTypes": [
+      {
+        "shape": 4,
+        "text": 12,
+      },
+    ],
+    "id": "template-modern",
+    "pageCount": 1,
+    "pageElementCounts": [
+      16,
+    ],
+    "representativeText": [
+      "张三",
+      "高级前端工程师 · 5 年经验",
+      "138-0000-0000   ·   zhangsan@email.com   ·   北京市",
+      "专业技能",
+    ],
+  },
+  {
+    "elementTypes": [
+      {
+        "shape": 5,
+        "text": 15,
+      },
+    ],
+    "id": "template-creative",
+    "pageCount": 1,
+    "pageElementCounts": [
+      20,
+    ],
+    "representativeText": [
+      "张三",
+      "UI / UX 设计师",
+      "联系方式",
+      "138-0000-0000
+zhangsan@email.com
+北京市朝阳区",
+    ],
+  },
+  {
+    "elementTypes": [
+      {
+        "shape": 5,
+        "text": 11,
+      },
+    ],
+    "id": "template-academic",
+    "pageCount": 1,
+    "pageElementCounts": [
+      16,
+    ],
+    "representativeText": [
+      "张 三",
+      "博士研究生 · 计算机科学 · zhangsan@univ.edu · 138-0000-0000",
+      "研究方向",
+      "机器学习、自然语言处理、大规模分布式系统。",
+    ],
+  },
+  {
+    "elementTypes": [
+      {
+        "shape": 5,
+        "text": 15,
+      },
+    ],
+    "id": "template-dark",
+    "pageCount": 1,
+    "pageElementCounts": [
+      20,
+    ],
+    "representativeText": [
+      "张三",
+      "高级前端专家",
+      "CONTACT",
+      "138-0000-0000
+zhangsan@email.com
+北京市朝阳区",
+    ],
+  },
+  {
+    "elementTypes": [
+      {
+        "shape": 1,
+        "text": 12,
+      },
+    ],
+    "id": "template-minimal",
+    "pageCount": 1,
+    "pageElementCounts": [
+      13,
+    ],
+    "representativeText": [
+      "张三",
+      "产品设计 · 前端开发",
+      "zhangsan@email.com   /   138-0000-0000",
+      "EXPERIENCE",
+    ],
+  },
+]
+`;

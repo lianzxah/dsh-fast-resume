@@ -1,0 +1,168 @@
+{
+  "name": "dsh-fast-resume",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": "=0.2.1-rc.2"
+  },
+  "exports": {
+    ".": {
+      "types": "./lib/types/src/host/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/src/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./types": {
+      "types": "./lib/types/src/types.d.ts",
+      "default": "./lib/types.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./tools": {
+      "types": "./lib/types/src/host/tools.d.ts",
+      "default": "./lib/tools.js"
+    }
+  },
+  "files": [
+    "lib",
+    "assets",
+    "locale/*.json",
+    "cordis.patch.yml",
+    "LICENSE",
+    "NOTICE",
+    "COMMERCIAL_LICENSE.md",
+    "README.md",
+    "README.zh.md",
+    "upstream-content.json",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts",
+    "docs"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "test": "vitest run tests",
+    "build:artifacts": "node scripts/build.mjs",
+    "build:check": "tsc --noEmit -p tsconfig.check.json && tsc --noEmit -p tsconfig.browser.json",
+    "build": "npm run build:artifacts && npm run build:check",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "node scripts/verify-harness.mjs",
+    "check:release": "node scripts/check-release.mjs",
+    "test:snapshot": "node scripts/verify-recorded-session.mjs"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh-atomic-write": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-brand": "0.2.1-rc.2",
+    "@deepseek-ai/schemastery": "3.18.5",
+    "mammoth": "^1.11.0",
+    "pdfjs-dist": "^5.4.624",
+    "pngjs": "^7.0.0",
+    "zod": "4.4.3"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-api-remotes": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-locale": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-workspace": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.2"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-agent": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-api-gateway": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-api-remotes": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-api-session-controller": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-app-boot": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-connection": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-locale": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-store": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-client-ui-workspace": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-typert-generator": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-typert-registry": "0.2.1-rc.2",
+    "@types/node": "^24.0.0",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "esbuild": "^0.25.0",
+    "jsdom": "29.1.1",
+    "jspdf": "^2.5.2",
+    "konva": "^9.3.16",
+    "lucide-react": "^0.460.0",
+    "motion": "^11.12.0",
+    "postcss": "^8.4.0",
+    "react": "^18.3.1",
+    "react-dnd": "^16.0.0",
+    "react-dnd-html5-backend": "^16.0.0",
+    "react-dom": "^18.3.1",
+    "react-konva": "^18.2.10",
+    "react-resizable-panels": "^2.1.0",
+    "react-router-dom": "^6.28.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "^3.4.0",
+    "tsx": "^4.20.0",
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.0",
+    "zustand": "^5.0.0",
+    "@napi-rs/canvas": "0.1.100"
+  },
+  "description": "Fast Resume canvas editor, resume management and agent tools for DeepSeek Harness.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lianzxah/dsh-fast-resume.git"
+  },
+  "homepage": "https://github.com/lianzxah/dsh-fast-resume#readme",
+  "bugs": {
+    "url": "https://github.com/lianzxah/dsh-fast-resume/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "resume",
+    "fast-resume"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

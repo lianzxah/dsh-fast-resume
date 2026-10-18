@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@resume-editor/shared": [
+        "upstream/shared/src/index.ts"
+      ],
+      "@resume-editor/canvas-engine": [
+        "upstream/canvas-engine/src/index.ts"
+      ],
+      "@resume-editor/templates": [
+        "upstream/templates/src/index.ts"
+      ]
+    }
+  }
+}

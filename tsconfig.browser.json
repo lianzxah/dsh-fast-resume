@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "react",
+      "react-dom"
+    ],
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "paths": {
+      "@/*": [
+        "upstream/editor/src/*"
+      ],
+      "@resume-editor/shared": [
+        "upstream/shared/src/index.ts"
+      ],
+      "@resume-editor/canvas-engine": [
+        "upstream/canvas-engine/src/index.ts"
+      ],
+      "@resume-editor/templates": [
+        "upstream/templates/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/client/**/*.tsx",
+    "src/editor/**/*",
+    "src/protocol.ts",
+    "lib/typert.remote-client.d.ts",
+    "tests/browser/**/*.ts"
+  ]
+}

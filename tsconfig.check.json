@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.host.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "emitDeclarationOnly": false
+  },
+  "include": [
+    "src/host/**/*.ts",
+    "src/types.ts",
+    "lib/typert*.d.ts",
+    "tests/*.ts",
+    "tests/integration/**/*.ts",
+    "tests/editor/**/*.ts"
+  ]
+}
