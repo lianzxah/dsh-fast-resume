@@ -1,0 +1,59 @@
+# Bilingual-pair consistency record for README.md and README.zh.md.
+# Per-heading hashes of English and Chinese prose outside code blocks and generated regions.
+/:
+  en: 38eb82dbbf648cdb
+  zh: 31f29e928af6ffbf
+/fast-resume-for-deepseek-harness:
+  en: 1f034ce1d08f112f
+  zh: fc73dcacb691ed25
+/fast-resume-for-deepseek-harness/summary:
+  en: c2bcda1a48fdf89c
+  zh: 8c434fd29c40a99b
+/fast-resume-for-deepseek-harness/table-of-contents:
+  en: 687240039cbd20ed
+  zh: c04880d52afaf1de
+/fast-resume-for-deepseek-harness/features:
+  en: f2bb113029b0ffc5
+  zh: e967e1ee411f58b4
+/fast-resume-for-deepseek-harness/screenshots:
+  en: 52df9ca196944b06
+  zh: d4406d060d012bf3
+/fast-resume-for-deepseek-harness/screenshots/canvas-editor:
+  en: 4660775b45deb07f
+  zh: 35c585f082500934
+/fast-resume-for-deepseek-harness/screenshots/visual-version-history:
+  en: 22d607524402bbcf
+  zh: 86f9fd69cfcde736
+/fast-resume-for-deepseek-harness/installation:
+  en: 68ba02b824177205
+  zh: dba6afcc3cffe881
+/fast-resume-for-deepseek-harness/usage-examples:
+  en: b996164cc1df0a33
+  zh: d82b38ff48c82dc0
+/fast-resume-for-deepseek-harness/usage-examples/1-create-and-edit-a-resume:
+  en: 8557991a4117f7de
+  zh: c801f473be147410
+/fast-resume-for-deepseek-harness/usage-examples/2-refine-it-with-your-harness-agent:
+  en: 339aa2c53b3105f7
+  zh: e719856ed86ce725
+/fast-resume-for-deepseek-harness/usage-examples/3-save-a-milestone-and-compare-versions:
+  en: b2e625fe3332a498
+  zh: 522070be7c23f575
+/fast-resume-for-deepseek-harness/usage-examples/4-import-or-export-your-document:
+  en: e2ac6c51e852a52b
+  zh: 90fdf9a1923be75b
+/fast-resume-for-deepseek-harness/configuration-and-storage:
+  en: 4486ce97afaa7b56
+  zh: 06f480e4e22ff3c4
+/fast-resume-for-deepseek-harness/development:
+  en: 3a50af134c1f607a
+  zh: 8d8ba1acbc45311d
+/fast-resume-for-deepseek-harness/model-experience:
+  en: 32409430a3c119d3
+  zh: 378adcd899050001
+/fast-resume-for-deepseek-harness/limitations-and-license:
+  en: ca2bcb0a00548d85
+  zh: 5688e422c8f7feb3
+/fast-resume-for-deepseek-harness/limitations-and-license/dev-note:
+  en: a7dc5af1b32d54d3
+  zh: 80f27f96e36ed7a6

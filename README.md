@@ -1,58 +1,129 @@
 ---
-description: "Standalone Harness profile layer providing the Fast Resume canvas editor, document management and Session tools."
+description: "Create, manage and improve resumes inside DeepSeek Harness, with a full canvas editor and agent assistance."
 kind: "package-bundle"
 ---
 
-# dsh-fast-resume
+# Fast Resume for DeepSeek Harness
 
 English | [中文](README.zh.md)
 
 ## Summary
 
-This optional profile layer embeds the complete Fast Resume canvas editor in Harness and adds profile-local resume management and agent tools. It includes six templates, recursive layers, properties, pages, imports, history and PDF/PNG/JSON export. Agent assistance uses normal Harness Sessions and their configured models. Fast Resume login, account administration and separate model credentials are excluded.
+Create, manage and refine your resumes inside DeepSeek Harness. Edit text, images, shapes and nested layers on a multipage canvas, choose from six templates, and export PDF, PNG or editable JSON. Use your existing Harness model to propose wording and layout improvements, review the changes, and apply them to the same document. Install `dsh-fast-resume` as an optional profile layer; no separate Fast Resume account is required.
 
-The management workspace includes real first-page previews, title search and ordering, actual document/page counts, and visible editing actions. Aurora highlights and restrained motion follow the Harness light/dark theme, keyboard focus and reduced-motion preferences; visible-card previews are cancelled and released when obsolete. Delete confirmation shows the exact resume and revision, explains removal of saved history, and provides keyboard-accessible Cancel/Confirm actions with pending and failure feedback. The editor keeps one compact Resume space/title/status strip; save, history and panel controls sit in the lower icon toolbar. Version history includes actual saved-page thumbnails, page selection and named-version saving; restoring creates a new current revision and requires a clean draft. Left and right editor sidebars resize proportionally, snap closed past their minimum threshold, and reopen from the divider or toolbar with the previous expanded width.
+![Resume workspace with real previews, search and document management](docs/images/resume-workspace.jpg)
 
 ## Table of Contents
 
-- [Use this package](#use-this-package)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Installation](#use-this-package)
+- [Usage examples](#usage)
 - [Configuration and storage](#configuration-and-storage)
-- [Understand the implementation](#understand-the-implementation)
-- [Build and publish](#build-and-publish)
+- [Development](#understand-the-implementation)
 - [Model Experience](#model-experience)
-- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
-- [Dev Note](#dev-note)
+- [Limitations and license](#known-limitations-and-deferred-work)
+
+-----
+
+<a id="features"></a>
+## Features
+
+Keep visual editing and agent assistance in one workflow.
+
+| Capability | What you can do |
+|---|---|
+| Canvas editing | Edit text, images and shapes; group nested layers; control order, visibility, locks, alignment and element properties. |
+| Templates and pages | Start with six templates, manage multiple pages, zoom the canvas, and resize or collapse either sidebar. |
+| Resume management | Browse real first-page thumbnails; search, sort, rename, duplicate and delete resumes. |
+| Version history | Save named versions, preview historical pages and restore a version as a new revision. |
+| Harness assistance | Send the current resume and selected-layer context to a normal Harness conversation; review, apply or revert durable proposals. |
+| Import and export | Import JSON, Markdown, Word or PDF; export all pages to PDF, the selected page to PNG, or an editable JSON backup. |
+
+-----
+
+<a id="screenshots"></a>
+## Screenshots
+
+These screenshots show the installed Harness Web plugin with synthetic resumes used for verification.
+
+### Canvas editor
+
+Collapse the sidebars for more canvas space, or reopen them from the right-hand toolbar to work with templates, layers and properties. Dragging past the minimum threshold also collapses a sidebar.
+
+![Canvas editor with collapsed sidebars and a two-page resume](docs/images/resume-editor.jpg)
+
+### Visual version history
+
+Identify versions by their actual saved-page thumbnails. Select a version, switch preview pages and restore it without replacing the existing history.
+
+![Version history with thumbnails, named saves and page preview](docs/images/version-history.jpg)
 
 -----
 
 <a id="use-this-package"></a>
-## Use this package
+## Installation
 
-Requires Harness **0.2.1-rc.2**, pnpm on PATH, and Node `^22.19.0 || >=24.0.0`. Install the built tarball into the profile you use:
+Use **DeepSeek Harness 0.2.1-rc.2**, Node **`^22.19.0 || >=24.0.0`**, and pnpm available on PATH. The plugin version in this repository is `0.1.0`.
+
+Obtain a built `.tgz` package, or generate one with the [source-build steps](#understand-the-implementation). Install it into the profile you use:
 
 ```sh
 dsh plugin --profile web add /absolute/path/dsh-fast-resume-0.1.0.tgz
 dsh --profile web
 ```
 
-After installation, open **Resumes** in the Harness sidebar. Create or import a resume, select a template, and edit with the original canvas, layer and property panels. Saves use revision checks. When another client or an agent changes the same document, a dirty draft is retained with reload and save-as-copy choices. Recovery drafts require an explicit choice.
+Open **Resumes / 简历** in the Harness sidebar. The workspace displays your saved resumes and the create/import actions.
 
-Use the editor's assistant controls to open an ordinary Harness conversation with the document ID, revision and selected layers. Configure a model in Harness as usual. Review durable proposals in the editor, apply them, or undo an applied proposal. Undo preserves unrelated later edits and rejects overlapping changes.
-
-```sh
-dsh plugin --profile web remove dsh-fast-resume
-```
-
-Removing the package retains profile-local resume files and exports. Reinstall into the same profile to use them again. For an initialized Desktop profile, replace `web` with `desktop` and restart the application. The registry command becomes available only after the owner publishes the package:
+If `dsh-fast-resume@0.1.0` has been published to your registry, you can install by package name instead:
 
 ```sh
 dsh plugin --profile web add dsh-fast-resume@0.1.0
 ```
 
+For an initialized Desktop profile, replace `web` with `desktop` and restart the application. The recorded browser verification covers Web; Desktop interaction is not claimed as verified.
+
+-----
+
+<a id="usage"></a>
+## Usage examples
+
+### 1. Create and edit a resume
+
+1. Choose **New resume / 新建简历**, enter a name, and choose a template or blank document.
+2. Use the left panel to switch templates, inspect layers and manage pages. Select an element and edit its text, dimensions, colors or links in the properties panel.
+3. Drag either divider to resize the workspace. Use the toolbar panel icons to collapse or reopen the sidebars; the mounted workspace remembers their expanded widths.
+4. Wait for the saved indicator, or use the save icon / `Ctrl+S`.
+
+### 2. Refine it with your Harness agent
+
+Configure a model in Harness, save the current draft, then open **AI assistant / AI助手** in the editor. Submit an instruction; the plugin carries the document ID, revision and selected layers into a normal Harness Session.
+
+Example: improve wording while preserving facts.
+
+> Read this resume and improve the work-experience wording for a frontend engineering role.
+> Preserve the facts, dates and figures. Do not invent achievements or skills.
+> Create a proposal first; do not apply it until I have reviewed it.
+
+Review the before/after preview in the assistant panel, then apply the proposal you want. You can revert an applied proposal; overlapping later edits produce a conflict instead of being overwritten.
+
+### 3. Save a milestone and compare versions
+
+Open the history icon, enter a version name such as “Frontend application”, and save a named version. Select a thumbnail to inspect that snapshot; use the page selector for multipage resumes. Restore only after the current draft is saved. Restoring creates a new revision and retains existing versions.
+
+### 4. Import or export your document
+
+Use **Import / 导入** for an existing JSON backup, Markdown, Word or PDF. Choose PDF for a document containing all pages, PNG for the selected page, or JSON to keep an editable backup. PDF/Word imports extract semantic content; they do not promise the original layout. PDF/PNG export requires a connected Harness client renderer.
+
 -----
 
 <a id="configuration-and-storage"></a>
 ## Configuration and storage
+
+Resume files, history, proposals and exports stay in the active profile, under `<profile>/data/fast-resume` by default. Autosave uses revision checks; when another client or agent changes the same resume, a dirty draft is retained with reload and save-as-copy choices. Draft recovery requires an explicit choice.
+
+<details>
+<summary>Advanced configuration</summary>
 
 The installed [patch](cordis.patch.yml) contributes `fast-resume` and `fast-resume-tools`. Override the Host row in your profile's `cordis.patch.yml`:
 
@@ -76,53 +147,56 @@ The installed [patch](cordis.patch.yml) contributes `fast-resume` and `fast-resu
 | `frameConnectTimeoutMs` / `rendererPollIntervalMs` | `15000` / `1000` | Editor connection deadline and renderer polling; polling must be shorter than the lease |
 | `refreshIntervalMs` / `bridgeTimeoutMs` | `2000` / render plus connection deadlines | Document refresh and message deadline; messages must allow the full export deadline |
 
-JSON export contains an editable Fast Resume backup. PDF exports all pages; PNG exports the selected page. PDF and PNG require a connected Harness client, whose background renderer stays available when the resume panel is closed. The Host verifies complete binary data, dimensions and page count before storing an artifact and returning its receipt. Receipt dimensions use millimeters for PDF/JSON and pixels for PNG.
+</details>
+
+To remove the plugin:
+
+```sh
+dsh plugin --profile web remove dsh-fast-resume
+```
+
+Uninstalling retains the profile-local resume files and exports. Reinstall into the same profile to use them again.
 
 -----
 
 <a id="understand-the-implementation"></a>
-## Understand the implementation
+## Development
 
-<details>
-<summary>Implementation internals</summary>
-
-The Host owns optimistic revisions, atomic file replacement, cross-process locks, durable proposals and idempotent mutation receipts. Its generated authenticated Remote API serves a thin Harness Client plugin. The complete editor runs in a packaged opaque-origin iframe using a nonce-bound MessagePort with validated requests. It has no model credentials or dependency on the original server. Parent-owned recovery storage retains browser drafts.
-
-The renderer receives an immutable committed document and agreed pixel ratio. Request cancellation, timeout, renderer disconnect and plugin disposal invalidate pending exports. Retained upstream source and its baseline hashes are in the source distribution; [upstream-content.json](upstream-content.json), [LICENSE](LICENSE), [NOTICE](NOTICE) and [commercial licensing terms](COMMERCIAL_LICENSE.md) accompany publication.
-
-</details>
-
------
-
-<a id="build-and-publish"></a>
-## Build and publish
-
-The source project builds independently of either original checkout. From its root, with a supported Node version:
+The source project builds independently of the original Fast Resume and Harness checkouts. From the plugin project root:
 
 ```sh
 npm ci --workspaces=false
 npm run build --workspaces=false
-node node_modules/vitest/vitest.mjs run tests upstream --maxWorkers=1
-node scripts/check-consumer.mjs
-node scripts/check-release.mjs
 npm pack --workspaces=false --ignore-scripts
 ```
 
-The package publishes ESM Host, tools, Client, public types and generated Typert exports, plus the editor HTML and installation patch. There is no custom application binary. Test the tarball through `dsh plugin` before publishing it with your npm account. The npm package name is `dsh-fast-resume`; the source repository is [lianzxah/dsh-fast-resume](https://github.com/lianzxah/dsh-fast-resume). See the [verification report](docs/verification.md) for executed checks and their limits.
+The result is `dsh-fast-resume-0.1.0.tgz`. Test that tarball through `dsh plugin` before publishing. The package includes the Host, tools, Client, editor HTML, installation patch and documentation.
 
-The source project also exposes `test:integration`, `test:e2e`, `test:snapshot` and `check:release`. Installed checks require `DSH_TEST_CLI`, `DSH_TEST_REPLAY` and a tarball argument; `DSH_TEST_REGISTRY` optionally chooses the package registry. `test:snapshot` derives its two model calls from an actual recorded live Session and invokes the installed `resume_read` without model credentials. The scripted six-tool integration check separately covers uninstall/reinstall and disable/re-enable retention.
+<details>
+<summary>Implementation overview</summary>
+
+The [installation patch](cordis.patch.yml) adds `fast-resume` and `fast-resume-tools`. The Host owns revisions, atomic file writes, durable proposals and mutation receipts. The editor runs in an opaque-origin iframe and communicates through a validated MessagePort; it does not hold model credentials or call the original Fast Resume server. Retained upstream source and its hashes are recorded in [upstream-content.json](upstream-content.json).
+
+</details>
 
 -----
 
 <a id="model-experience"></a>
 ## Model Experience
 
-The tools list, create and read documents, propose and apply operations, undo changes, inspect or restore history, and export artifacts. They run in the normal Agent scope and their requests/results remain in the Session log. Read results replace inline image bytes with stable asset references; export tool results contain artifact paths and measured metadata, without base64 payloads. The editor's prompt references the document; the agent reads its contents through the logged tools.
+Resume tools run in the normal Agent scope, and their requests/results remain in the Harness Session log. The agent can read the current document, propose changes, apply or revert proposals, inspect history and export artifacts. Image reads use asset references; export results include artifact paths and metadata instead of inline base64 data.
+
+-----
 
 <a id="known-limitations-and-deferred-work"></a>
-## Known Limitations and Deferred Work
+## Limitations and license
 
-Fast Resume uses the retained **PolyForm Noncommercial 1.0.0** license; commercial use requires the upstream owner's separate written license. This plugin does not change those terms. Original editor labels remain Chinese; the Harness shell supports English and Chinese. Word/PDF imports extract semantic content rather than reproduce arbitrary source layouts. Headless PDF/PNG export requires a connected browser renderer. Untrusted remote images may fail browser loading or canvas export and produce an explicit error. Live-model optimization requires the user's normal Harness model configuration.
+- The editor labels are currently Chinese; the Harness integration supports English and Chinese.
+- Model-assisted editing uses your Harness model configuration. Review proposals before applying changes to your resume.
+- Remote images can fail to load or prevent canvas export; the plugin reports these failures.
+- Fast Resume retains **PolyForm Noncommercial 1.0.0**. Commercial use requires separate written permission from the upstream owner. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [commercial licensing terms](COMMERCIAL_LICENSE.md).
+
+For executed checks and platform coverage, read the [verification report](docs/verification.md) ([中文](docs/verification.zh.md)). Source and issue tracking: [lianzxah/dsh-fast-resume](https://github.com/lianzxah/dsh-fast-resume).
 
 <a id="dev-note"></a>
 ### Dev Note
@@ -130,6 +204,6 @@ Fast Resume uses the retained **PolyForm Noncommercial 1.0.0** license; commerci
 <details>
 <summary>Maintainer context</summary>
 
-No Harness loop or released Session format changes are required. The project builds from its own package lockfile.
+Keep screenshots based on synthetic resumes, and update both language versions when workflows change.
 
 </details>
