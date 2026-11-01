@@ -15,7 +15,7 @@ describe('Client plugin activation',()=>{
    ctx.provide('connection',{
     interactions:'none',isLoopback:true,generation:{getSnapshot:()=>undefined,subscribe:()=>()=>{}},state:{getSnapshot:()=>undefined,subscribe:()=>()=>{}},
     openWebSocket:()=>{throw Error('Unexpected socket')},reconnect:()=>{},registerGenerationSource:()=>()=>{},start:()=>({stop:()=>{}}),
-    rpc:{call:async(_path,endpoint)=>{calls.push(endpoint);switch(endpoint){case'fastResume/editorAssets':return{ok:true,value:{html:'',autosaveDelayMs:2000,maxImportBytes:10485760,maxDocumentBytes:10485760,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,refreshIntervalMs:2000}};case'fastResume/rendererRegister':return{ok:true,value:{rendererId:'lease',leaseMs:15000}};case'fastResume/rendererPoll':return{ok:true,value:null};case'fastResume/rendererUnregister':return{ok:true,value:true};default:throw Error(`Unexpected RPC ${endpoint}`)}},open:async function*(){throw Error('Unexpected stream')}},
+    rpc:{call:async(_path,endpoint)=>{calls.push(endpoint);switch(endpoint){case'fastResume/editorAssets':return{ok:true,value:{html:'',autosaveDelayMs:2000,maxImportBytes:10485760,maxDocumentBytes:10485760,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',refreshIntervalMs:2000}};case'fastResume/rendererRegister':return{ok:true,value:{rendererId:'lease',leaseMs:15000}};case'fastResume/rendererPoll':return{ok:true,value:null};case'fastResume/rendererUnregister':return{ok:true,value:true};default:throw Error(`Unexpected RPC ${endpoint}`)}},open:async function*(){throw Error('Unexpected stream')}},
    } satisfies ConnectionHandle)
    await ctx.plugin(gateway)
    ctx.provide('remote.session',{})

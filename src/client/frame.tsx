@@ -19,7 +19,7 @@ export function connectFrame(frame:HTMLIFrameElement,assets:EditorAssets,locale:
  const nonce=crypto.randomUUID(),ownerKey='fast-resume:editor-owner:v1'
  let recoveryOwnerId:string=nonce,recoveryOwnerPersistent=true
  if(mode==='editor'){try{recoveryOwnerId=sessionStorage.getItem(ownerKey)??crypto.randomUUID();sessionStorage.setItem(ownerKey,recoveryOwnerId)}catch(error){recoveryOwnerId=nonce;recoveryOwnerPersistent=false}}
- const bootstrap:Bootstrap={nonce,recoveryOwnerId,recoveryOwnerPersistent,mode,locale,autosaveDelayMs:assets.autosaveDelayMs,maxImportBytes:assets.maxImportBytes,maxDocumentBytes:assets.maxDocumentBytes,frameConnectTimeoutMs:assets.frameConnectTimeoutMs,bridgeTimeoutMs:assets.bridgeTimeoutMs,rendererPollIntervalMs:assets.rendererPollIntervalMs,refreshIntervalMs:assets.refreshIntervalMs}
+ const bootstrap:Bootstrap={wheelZoomDirection:assets.wheelZoomDirection,nonce,recoveryOwnerId,recoveryOwnerPersistent,mode,locale,autosaveDelayMs:assets.autosaveDelayMs,maxImportBytes:assets.maxImportBytes,maxDocumentBytes:assets.maxDocumentBytes,frameConnectTimeoutMs:assets.frameConnectTimeoutMs,bridgeTimeoutMs:assets.bridgeTimeoutMs,rendererPollIntervalMs:assets.rendererPollIntervalMs,refreshIntervalMs:assets.refreshIntervalMs}
  let active=true,port:MessagePort|undefined,bridge:PortBridge|undefined,claimed=false
  const controllers=new Set<AbortController>()
  const timer=setTimeout(()=>{if(!claimed&&active)onError('Editor did not connect. Reload the panel.')},assets.frameConnectTimeoutMs)

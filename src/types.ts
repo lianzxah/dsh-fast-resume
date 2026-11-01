@@ -30,6 +30,8 @@ export interface Config {
   frameConnectTimeoutMs?: number
   bridgeTimeoutMs?: number
   rendererPollIntervalMs?: number
+  /** Auto honors the device inversion flag; explicit modes follow raw or reversed wheel deltas. */
+  wheelZoomDirection?: 'auto' | 'standard' | 'reversed'
   refreshIntervalMs?: number
 }
 /** Resolved deployment values. */
@@ -90,6 +92,6 @@ export interface StoredProposal extends ProposalView { requestId: string; finger
 export interface ResumeEnvelope { schemaVersion: 1; revision: ResumeRevision; document: ResumeDocument; versions: StoredVersion[]; proposals: StoredProposal[]; changes: ChangeReceipt[]; sessionId?: string; deleted?: boolean }
 
 /** Packaged srcdoc and resolved adapter limits. */
-export interface EditorAssets { html: string; autosaveDelayMs: number; maxImportBytes: number; maxDocumentBytes: number; frameConnectTimeoutMs: number; bridgeTimeoutMs: number; rendererPollIntervalMs: number; refreshIntervalMs: number }
+export interface EditorAssets { wheelZoomDirection: 'auto' | 'standard' | 'reversed'; html: string; autosaveDelayMs: number; maxImportBytes: number; maxDocumentBytes: number; frameConnectTimeoutMs: number; bridgeTimeoutMs: number; rendererPollIntervalMs: number; refreshIntervalMs: number }
 
 export {resumeIdSchema,resumeRevisionSchema,versionIdSchema,proposalIdSchema} from './identity.ts'

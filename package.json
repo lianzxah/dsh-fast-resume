@@ -75,7 +75,10 @@
     "test:integration": "vitest run tests/integration",
     "test:e2e": "node scripts/verify-harness.mjs",
     "check:release": "node scripts/check-release.mjs",
-    "test:snapshot": "node scripts/verify-recorded-session.mjs"
+    "test:snapshot": "node scripts/verify-recorded-session.mjs",
+    "dev": "node scripts/dev.mjs watch",
+    "dev:setup": "node scripts/dev.mjs setup",
+    "dev:start": "node scripts/dev.mjs start"
   },
   "dependencies": {
     "@deepseek-ai/dsh-atomic-write": "0.2.1-rc.2",

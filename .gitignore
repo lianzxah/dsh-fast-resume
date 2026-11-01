@@ -1,5 +1,6 @@
 /node_modules/
 /lib/
+/docs/superpowers/
 /assets/
 /dist/
 /*.tgz
@@ -8,3 +9,4 @@
 .env.*
 !.env.example
 .DS_Store
+/.dev/

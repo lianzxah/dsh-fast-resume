@@ -90,10 +90,12 @@ For an initialized Desktop profile, replace `web` with `desktop` and restart the
 
 ### 1. Create and edit a resume
 
-1. Choose **New resume / 新建简历**, enter a name, and choose a template or blank document.
+1. Choose **New resume / 新建简历**, enter a name, and select a template preview or blank document. Open a saved resume by clicking its name or **Open editor**.
 2. Use the left panel to switch templates, inspect layers and manage pages. Select an element and edit its text, dimensions, colors or links in the properties panel.
 3. Drag either divider to resize the workspace. Use the toolbar panel icons to collapse or reopen the sidebars; the mounted workspace remembers their expanded widths.
 4. Wait for the saved indicator, or use the save icon / `Ctrl+S`.
+
+The editor initially fills the available canvas width; long pages scroll vertically. Toolbar zoom preserves the viewport center, and wheel zoom preserves the pointer position. Larger zoom levels allow horizontal scrolling. Fit width and Fit to window return to automatic width or whole-page fitting, while manual zoom stays unchanged when panels resize.
 
 ### 2. Refine it with your Harness agent
 
@@ -114,6 +116,8 @@ Open the history icon, enter a version name such as “Frontend application”, 
 ### 4. Import or export your document
 
 Use **Import / 导入** for an existing JSON backup, Markdown, Word or PDF. Choose PDF for a document containing all pages, PNG for the selected page, or JSON to keep an editable backup. PDF/Word imports extract semantic content; they do not promise the original layout. PDF/PNG export requires a connected Harness client renderer.
+
+Use the file drop zone or paste Markdown in the import dialog. The dialog stays open while a file is being read or imported, and reports validation or import failures in place.
 
 -----
 
@@ -136,6 +140,7 @@ The installed [patch](cordis.patch.yml) contributes `fast-resume` and `fast-resu
 
 | Field | Default | Meaning |
 |---|---|---|
+| `wheelZoomDirection` | `auto` | Ctrl/⌘ + wheel zoom: `auto` honors browser device-inversion metadata, `standard` follows raw wheel deltas, and `reversed` flips them for devices that feel backwards. Plain wheel scrolling is unchanged. Explicit reversal also reverses trackpad pinch events delivered as Ctrl+wheel; use `auto` for native pinch behavior. |
 | `storageDir` | `<profile>/data/fast-resume` | Atomic document envelopes, history, proposals, receipts and exports |
 | `autosaveDelayMs` | `2000` | Browser save debounce |
 | `maxDocumentBytes` / `maxImportBytes` | `10485760` each | Document/render response and imported file byte bounds |
@@ -171,6 +176,19 @@ npm pack --workspaces=false --ignore-scripts
 ```
 
 The result is `dsh-fast-resume-0.1.0.tgz`. Test that tarball through `dsh plugin` before publishing. The package includes the Host, tools, Client, editor HTML, installation patch and documentation.
+
+### Local Harness development
+
+With Node and pnpm on PATH, `npm run dev:setup --workspaces=false` builds both compiler faces and installs a `link:` dependency through `dsh plugin` into `.dev/home/profiles/web`. Inside a Harness checkout, build Harness first with `pnpm run build:artifacts`; the helper uses `apps/cli/lib/bin.js`. Elsewhere it uses `dsh` on PATH, or the launcher file supplied through `DSH_DEV_CLI`.
+
+```sh
+npm run dev:setup --workspaces=false
+npm run dev --workspaces=false
+```
+
+Open the authenticated URL printed by Harness (default port `58358`), then open Resume space. The helper watches source, upstream code, locales and build configuration, stops Web before rebuilding, and restarts it after both compiler faces pass. A failed rebuild leaves Web stopped until you fix and save the source. Save your editor changes before editing code; interrupted drafts use the normal recovery flow. Ctrl+C stops the watcher and its child processes. Use `npm run dev:start --workspaces=false` for a build and launch without watching; Web flags follow `--`, for example `npm run dev --workspaces=false -- --port 58359`.
+
+`.dev/` is Git-ignored and holds development profiles, resumes and local configuration. Configure a model in this development Web UI to test agent assistance; no credentials are copied from other profiles. Set `DSH_HOME` explicitly to use another home. A fresh enclosing Harness clone initializes this checkout with `git submodule update --init --recursive plugins/fast-resume`. Commit and push plugin edits from this directory, then stage the updated submodule revision in Harness.
 
 <details>
 <summary>Implementation overview</summary>

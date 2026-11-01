@@ -90,10 +90,12 @@ dsh plugin --profile web add dsh-fast-resume@0.1.0
 
 ### 1. 创建与编辑简历
 
-1. 点击**新建简历**，输入名称，选择模板或空白文档。
+1. 点击**新建简历**，输入名称，通过缩略预览选择模板或空白文档。已保存的简历可点击名称或**进入编辑**打开。
 2. 在左侧面板切换模板、查看图层和管理页面；选中元素后，在属性面板调整文字、尺寸、颜色或链接。
 3. 拖拽分隔条调整工作区宽度，通过工具栏面板图标收起或展开侧栏；当前工作区会记住展开宽度。
 4. 等待状态显示已保存，或点击保存图标、使用 `Ctrl+S`。
+
+编辑器进入后，默认按中间画布宽度尽量放大简历，长页面可纵向滚动。工具栏缩放保持视口中心，滚轮缩放保持鼠标位置；放大超过画布宽度后可横向滚动。“适应宽度”和“适应窗口”可分别恢复自动宽度适配和整页适配，手动缩放不会被面板调整覆盖。
 
 ### 2. 让 Harness 智能体辅助优化
 
@@ -114,6 +116,8 @@ dsh plugin --profile web add dsh-fast-resume@0.1.0
 ### 4. 导入与导出文档
 
 通过**导入**打开已有 JSON 备份、Markdown、Word 或 PDF。导出 PDF 可保留全部页面，PNG 导出当前页面，JSON 用于可继续编辑的备份。PDF/Word 导入提取语义内容，不保证复刻原版式；PDF/PNG 导出需要连接的 Harness 客户端渲染器。
+
+可将文件拖放到导入区，也可粘贴 Markdown 文本。读取文件和导入期间弹窗保持打开，校验或导入失败会直接在弹窗内提示。
 
 -----
 
@@ -136,6 +140,7 @@ dsh plugin --profile web add dsh-fast-resume@0.1.0
 
 | 字段 | 默认值 | 含义 |
 |---|---|---|
+| `wheelZoomDirection` | `auto` | Ctrl/⌘ + 滚轮缩放方向：`auto` 根据浏览器设备反转标记校正，`standard` 按原始滚动增量处理，`reversed` 用于实际体验反向的设备。不按修饰键时仍正常滚动画布。显式反向也会反转以 Ctrl+wheel 传递的触控板捏合；触控板原生捏合应使用 `auto`。 |
 | `storageDir` | `<profile>/data/fast-resume` | 原子文档封套、历史、提案、回执和导出文件 |
 | `autosaveDelayMs` | `2000` | 浏览器保存防抖间隔 |
 | `maxDocumentBytes` / `maxImportBytes` | 各 `10485760` | 文档及渲染响应、导入文件的字节上限 |
@@ -171,6 +176,19 @@ npm pack --workspaces=false --ignore-scripts
 ```
 
 构建得到 `dsh-fast-resume-0.1.0.tgz`。发布前应通过 `dsh plugin` 测试实际安装包；包内包含 Host、工具、Client、编辑器 HTML、安装补丁及文档。
+
+### 本地 Harness 联调
+
+确保 Node 和 pnpm 在 PATH 中，`npm run dev:setup --workspaces=false` 会构建并检查两个编译面，通过 `dsh plugin` 将 `link:` 依赖安装到 `.dev/home/profiles/web`。在 Harness 工作区内，先执行 `pnpm run build:artifacts` 构建 Harness；辅助脚本会使用 `apps/cli/lib/bin.js`。在其他目录中，它使用 PATH 上的 `dsh`，也可以通过 `DSH_DEV_CLI` 指定启动器文件。
+
+```sh
+npm run dev:setup --workspaces=false
+npm run dev --workspaces=false
+```
+
+打开 Harness 在终端打印的带认证信息的地址（默认端口 `58358`），进入简历空间。辅助脚本监听源码、上游代码、语言资源及构建配置，重新构建前停止 Web，两个编译面均通过后重启。构建失败时 Web 保持停止，修复并保存源码后会重新构建。修改代码前请保存编辑器内容；中断的草稿使用正常的恢复流程。Ctrl+C 停止监听器及其子进程。仅构建并启动、不监听时使用 `npm run dev:start --workspaces=false`；Web 参数放在 `--` 后，例如 `npm run dev --workspaces=false -- --port 58359`。
+
+`.dev/` 已被 Git 忽略，用于保存开发 profile、简历及本地配置。测试智能体辅助功能时，在这个开发 Web 界面配置模型；脚本不会复制其他 profile 的凭据。可显式设置 `DSH_HOME` 使用其他目录。全新克隆 Harness 后，执行 `git submodule update --init --recursive plugins/fast-resume` 初始化此目录。插件改动在此目录内提交并推送，再在 Harness 中暂存更新后的子模块版本。
 
 <details>
 <summary>实现概览</summary>

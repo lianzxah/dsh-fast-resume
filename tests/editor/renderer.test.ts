@@ -18,7 +18,7 @@ describe('connected renderer lifecycle',()=>{
   const queue=new RenderQueue({timeoutMs:1000,leaseMs:40,maxRequests:1,maxBytes:100000,maxPixels:10000}),delayed=deferred<void>(),report=vi.fn()
   let polls=0
   const register=vi.fn(async()=>{if(register.mock.calls.length===2)throw Error('Temporary registration failure');return queue.register()}),unregister=vi.fn(async(id:string)=>{queue.unregister(id);return true})
-  const worker=new RendererWorker({pollIntervalMs:5,register,poll:async id=>{if(++polls===2)await delayed.promise;try{return queue.poll(id)}catch(error){if(error instanceof ResumeError)throw new RemoteError('FAST_RESUME_ERROR',error.message,{code:error.code});throw error}},complete:r=>queue.complete(r),unregister,render:async()=>PNG.sync.write(new PNG({width:10,height:20})).toString('base64'),assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:5,refreshIntervalMs:2000}),report})
+  const worker=new RendererWorker({pollIntervalMs:5,register,poll:async id=>{if(++polls===2)await delayed.promise;try{return queue.poll(id)}catch(error){if(error instanceof ResumeError)throw new RemoteError('FAST_RESUME_ERROR',error.message,{code:error.code});throw error}},complete:r=>queue.complete(r),unregister,render:async()=>PNG.sync.write(new PNG({width:10,height:20})).toString('base64'),assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:5,wheelZoomDirection:'auto',refreshIntervalMs:2000}),report})
   try{
    await worker.start();await vi.advanceTimersByTimeAsync(45);delayed.resolve();await vi.advanceTimersByTimeAsync(0)
    await vi.advanceTimersByTimeAsync(5)
@@ -36,7 +36,7 @@ describe('connected renderer lifecycle',()=>{
  it('keeps its lease after a transient poll failure',async()=>{
   vi.useFakeTimers();const register=vi.fn(async()=>({rendererId:'lease',leaseMs:300})),report=vi.fn(),poll=vi.fn(async()=>null)
   poll.mockRejectedValueOnce(Error('Temporary RPC failure'))
-  const worker=new RendererWorker({pollIntervalMs:5,register,poll,complete:async()=>true,unregister:async()=>true,render:async()=>'',assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:5,refreshIntervalMs:2000}),report})
+  const worker=new RendererWorker({pollIntervalMs:5,register,poll,complete:async()=>true,unregister:async()=>true,render:async()=>'',assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:5,wheelZoomDirection:'auto',refreshIntervalMs:2000}),report})
   try{await worker.start();await vi.advanceTimersByTimeAsync(5);expect(register).toHaveBeenCalledTimes(1);expect(poll).toHaveBeenCalledTimes(2);expect(report).toHaveBeenCalledTimes(1)}finally{await worker.dispose()}
   expect(vi.getTimerCount()).toBe(0)
  })
@@ -45,7 +45,7 @@ describe('connected renderer lifecycle',()=>{
   const queue=new RenderQueue({timeoutMs:1000,leaseMs:40,maxRequests:1,maxBytes:100000,maxPixels:10000}),delayed=deferred<void>(),registered=deferred<void>(),release=deferred<void>()
   let polls=0
   const register=vi.fn(async()=>{const lease=queue.register();if(register.mock.calls.length===2){registered.resolve();await release.promise}return lease}),unregister=vi.fn(async(id:string)=>{queue.unregister(id);return true})
-  const worker=new RendererWorker({pollIntervalMs:5,register,poll:async id=>{if(++polls===2)await delayed.promise;try{return queue.poll(id)}catch(error){if(error instanceof ResumeError)throw new RemoteError('FAST_RESUME_ERROR',error.message,{code:error.code});throw error}},complete:r=>queue.complete(r),unregister,render:async()=>'',assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:5,refreshIntervalMs:2000}),report:vi.fn()})
+  const worker=new RendererWorker({pollIntervalMs:5,register,poll:async id=>{if(++polls===2)await delayed.promise;try{return queue.poll(id)}catch(error){if(error instanceof ResumeError)throw new RemoteError('FAST_RESUME_ERROR',error.message,{code:error.code});throw error}},complete:r=>queue.complete(r),unregister,render:async()=>'',assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:5,wheelZoomDirection:'auto',refreshIntervalMs:2000}),report:vi.fn()})
   try{
    await worker.start();await vi.advanceTimersByTimeAsync(45);delayed.resolve();await vi.advanceTimersByTimeAsync(5)
    expect(register).toHaveBeenCalledTimes(2);await registered.promise
@@ -59,7 +59,7 @@ describe('connected renderer lifecycle',()=>{
   vi.useFakeTimers();const gate=deferred<string>();const jobs=[job('first'),job('second')]
   const poll=vi.fn(async()=>jobs.shift()??null),complete=vi.fn(async(_r:unknown)=>true),unregister=vi.fn(async()=>true),report=vi.fn()
   const render=vi.fn(async(_a:unknown,j:RenderJob)=>j.id==='first'?gate.promise:'second-bytes')
-  const worker=new RendererWorker({pollIntervalMs:100,register:async()=>({rendererId:'lease',leaseMs:300}),poll,complete,unregister,render,assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:100,refreshIntervalMs:2000}),report})
+  const worker=new RendererWorker({pollIntervalMs:100,register:async()=>({rendererId:'lease',leaseMs:300}),poll,complete,unregister,render,assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:100,wheelZoomDirection:'auto',refreshIntervalMs:2000}),report})
   await worker.start();await vi.advanceTimersByTimeAsync(200)
   expect(poll.mock.calls.length).toBeGreaterThan(1);expect(render).toHaveBeenCalledTimes(1)
   gate.resolve('first-bytes');await vi.advanceTimersByTimeAsync(0)
@@ -69,18 +69,18 @@ describe('connected renderer lifecycle',()=>{
  it('aborts an active frame and never acknowledges cancelled work as success',async()=>{
   vi.useFakeTimers();const complete=vi.fn(async(_r:unknown)=>true),unregister=vi.fn(async()=>true)
   const render=vi.fn(async(_a:unknown,_j:RenderJob,signal:AbortSignal)=>new Promise<string>((_resolve,reject)=>signal.addEventListener('abort',()=>reject(Error('Cancelled')),{once:true})))
-  let first=true;const worker=new RendererWorker({pollIntervalMs:100,register:async()=>({rendererId:'lease',leaseMs:300}),poll:async()=>{if(first){first=false;return job('active')}return null},complete,unregister,render,assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:100,refreshIntervalMs:2000}),report:vi.fn()})
+  let first=true;const worker=new RendererWorker({pollIntervalMs:100,register:async()=>({rendererId:'lease',leaseMs:300}),poll:async()=>{if(first){first=false;return job('active')}return null},complete,unregister,render,assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:100,wheelZoomDirection:'auto',refreshIntervalMs:2000}),report:vi.fn()})
   await worker.start();await vi.advanceTimersByTimeAsync(0);expect(render).toHaveBeenCalledTimes(1)
   await worker.dispose();expect(complete).not.toHaveBeenCalled();expect(unregister).toHaveBeenCalledTimes(1);expect(vi.getTimerCount()).toBe(0)
  })
  it('unregisters a lease that completes registration after disposal',async()=>{
   const registered=deferred<{rendererId:string;leaseMs:number}>(),unregister=vi.fn(async()=>true)
-  const worker=new RendererWorker({pollIntervalMs:100,register:()=>registered.promise,poll:async()=>null,complete:async()=>true,unregister,assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:100,refreshIntervalMs:2000}),render:async()=>'',report:vi.fn()})
+  const worker=new RendererWorker({pollIntervalMs:100,register:()=>registered.promise,poll:async()=>null,complete:async()=>true,unregister,assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:100,wheelZoomDirection:'auto',refreshIntervalMs:2000}),render:async()=>'',report:vi.fn()})
   const start=worker.start(),close=worker.dispose();registered.resolve({rendererId:'late',leaseMs:300});await start;await close;expect(unregister).toHaveBeenCalledWith('late')
  })
  it('joins overlapping disposal calls until the same delayed unregister finishes',async()=>{
   const gate=deferred<boolean>(),unregister=vi.fn(()=>gate.promise)
-  const worker=new RendererWorker({pollIntervalMs:100,register:async()=>({rendererId:'lease',leaseMs:300}),poll:async()=>null,complete:async()=>true,unregister,assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:100,refreshIntervalMs:2000}),render:async()=>'',report:vi.fn()})
+  const worker=new RendererWorker({pollIntervalMs:100,register:async()=>({rendererId:'lease',leaseMs:300}),poll:async()=>null,complete:async()=>true,unregister,assets:async()=>({html:'',autosaveDelayMs:2000,maxDocumentBytes:10,maxImportBytes:10,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:100,wheelZoomDirection:'auto',refreshIntervalMs:2000}),render:async()=>'',report:vi.fn()})
   await worker.start();const first=worker.dispose(),second=worker.dispose();let settled=false;void second.then(()=>{settled=true})
   try{await Promise.resolve();await Promise.resolve();expect(settled).toBe(false);expect(unregister).toHaveBeenCalledTimes(1)}
   finally{gate.resolve(true);await first;await second}

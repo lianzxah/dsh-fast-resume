@@ -23,7 +23,7 @@ afterEach(async()=>{if(root)await act(async()=>root?.unmount());root=undefined;d
 function deferred<T>(){let resolve!:(value:T)=>void,reject!:(error:Error)=>void;const promise=new Promise<T>((a,b)=>{resolve=a;reject=b});return{resolve,reject,promise}}
 function button(label:string){const node=Array.from(document.querySelectorAll('button')).find(item=>item.getAttribute('aria-label')===label||item.textContent===label);if(!node)throw Error(`Missing ${label}`);return node}
 function setup(){
- const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000),api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,refreshIntervalMs:2000})
+ const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000),api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',refreshIntervalMs:2000})
  vi.spyOn(api,'history').mockResolvedValue(history);vi.spyOn(api,'version').mockImplementation(async(_id,versionId)=>snapshot(versionId==='v1'?1:2))
  const props={api,copy:en,state:{snapshot:snapshot(5),draft:'saved-5',dirty:false,saving:false,error:null} as DraftState,close:vi.fn(),save:vi.fn(async()=>{}),current:()=>props.state,blocked:false,refresh:vi.fn(async()=>{})}
  const container=document.createElement('div');document.body.append(container);root=createRoot(container)

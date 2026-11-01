@@ -28,7 +28,7 @@ function button(label:string){return Array.from(document.querySelectorAll('butto
 async function key(handle:HTMLElement,key:string){await act(async()=>{handle.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true,cancelable:true}))})}
 async function drag(handle:HTMLElement,to:number){const from=handle.getBoundingClientRect().x;await act(async()=>{handle.dispatchEvent(new PointerEvent('pointerdown',{clientX:from,clientY:200,isPrimary:true,buttons:1,bubbles:true,cancelable:true}))});await act(async()=>{handle.dispatchEvent(new PointerEvent('pointermove',{clientX:to,clientY:200,isPrimary:true,buttons:1,bubbles:true,cancelable:true}))});await act(async()=>{handle.dispatchEvent(new PointerEvent('pointerup',{clientX:to,clientY:200,isPrimary:true,bubbles:true,cancelable:true}))})}
 beforeEach(()=>{
- vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('IntersectionObserver',class{observe(){}disconnect(){}})
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});vi.stubGlobal('IntersectionObserver',class{observe(){}disconnect(){}})
  // jsdom has no layout; only geometry is supplied, while the real library owns drag thresholds and keyboard resizing.
  vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
   let x=0,width=1000
@@ -39,7 +39,7 @@ beforeEach(()=>{
 afterEach(async()=>{if(root)await act(async()=>root?.unmount());root=undefined;close();useEditorStore.setState(initial);document.body.replaceChildren();vi.restoreAllMocks();vi.unstubAllGlobals()})
 async function mount(left=true,right=true){
  useEditorStore.setState({ui:{...initial.ui,leftPanelVisible:left,rightPanelVisible:right}})
- const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000),api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,refreshIntervalMs:200000});close=()=>{bridge.close();port2.close()}
+ const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000),api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',refreshIntervalMs:200000});close=()=>{bridge.close();port2.close()}
  const doc={...initial.document,id:'panels',metadata:{...initial.document.metadata,title:'Synthetic panels'}}
  const snapshot={id:resumeIdSchema.parse('panels'),revision:resumeRevisionSchema.parse(4),title:'Synthetic panels',documentJson:JSON.stringify(doc),pageCount:doc.pages.length,updatedAt:'2026-10-18T00:00:00Z'}
  vi.spyOn(api,'list').mockResolvedValue([snapshot]);vi.spyOn(api,'read').mockResolvedValue(snapshot);vi.spyOn(api,'recovery').mockResolvedValue([])

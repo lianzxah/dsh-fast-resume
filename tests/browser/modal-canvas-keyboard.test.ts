@@ -18,12 +18,12 @@ vi.mock('../../src/editor/thumbnail.ts',()=>({renderSavedPage:vi.fn(async()=>'da
 vi.mock('@resume-editor/canvas-engine',async()=>({ResumeCanvas:()=>null,alignBoxes:vi.fn(),distributeBoxes:vi.fn(),getPageMetrics:(await import('../../upstream/canvas-engine/src/core/page-metrics.ts')).getPageMetrics}))
 let root:Root|undefined
 const initial=useEditorStore.getState()
-beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('IntersectionObserver',class{observe(){}disconnect(){}})})
+beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});vi.stubGlobal('IntersectionObserver',class{observe(){}disconnect(){}})})
 afterEach(async()=>{if(root)await act(async()=>root?.unmount());root=undefined;useEditorStore.setState(initial);document.body.replaceChildren();vi.unstubAllGlobals()})
 function key(target:Element,name:string,extra:KeyboardEventInit={}){const event=new KeyboardEvent('keydown',{key:name,bubbles:true,cancelable:true,...extra});target.dispatchEvent(event);return event}
 function button(label:string){const node=Array.from(document.querySelectorAll('button')).find(item=>item.getAttribute('aria-label')===label||item.textContent===label);if(!node)throw Error(`Missing ${label}`);return node}
 it('isolates history select/buttons/root and pending mutations while preserving native input, Tab, Escape and canvas commands after close',async()=>{
- const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000),api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,refreshIntervalMs:2000})
+ const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000),api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',refreshIntervalMs:2000})
  const element=createShapeElement('rectangle',{id:'selected-live-layer',left:10,top:20}),doc={...initial.document,pages:[{...initial.document.pages[0],elements:[element]}]}
  useEditorStore.getState().setDocument(doc);useEditorStore.getState().selectMultiple([element.id])
  const snapshot={id:resumeIdSchema.parse('history'),revision:resumeRevisionSchema.parse(4),title:'Synthetic',documentJson:JSON.stringify(doc),pageCount:2,updatedAt:'2026-10-18T00:00:00Z'}

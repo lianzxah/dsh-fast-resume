@@ -24,7 +24,7 @@ export const responseSchema=z.discriminatedUnion('ok',[
  z.object({kind:z.literal('response'),id,ok:z.literal(true),value:z.unknown()}),
  z.object({kind:z.literal('response'),id,ok:z.literal(false),error:z.object({message:z.string(),code:z.string().optional(),currentRevision:z.number().optional()})}),
 ])
-export const bootstrapSchema=z.object({nonce:id,recoveryOwnerId:id,recoveryOwnerPersistent:z.boolean(),mode:z.enum(['editor','renderer']),locale:z.enum(['zh','en']),autosaveDelayMs:z.number().positive(),maxImportBytes:z.number().positive(),maxDocumentBytes:z.number().positive(),frameConnectTimeoutMs:z.number().positive(),bridgeTimeoutMs:z.number().positive(),rendererPollIntervalMs:z.number().positive(),refreshIntervalMs:z.number().positive()})
+export const bootstrapSchema=z.object({nonce:id,recoveryOwnerId:id,recoveryOwnerPersistent:z.boolean(),mode:z.enum(['editor','renderer']),wheelZoomDirection:z.enum(['auto','standard','reversed']).default('auto'),locale:z.enum(['zh','en']),autosaveDelayMs:z.number().positive(),maxImportBytes:z.number().positive(),maxDocumentBytes:z.number().positive(),frameConnectTimeoutMs:z.number().positive(),bridgeTimeoutMs:z.number().positive(),rendererPollIntervalMs:z.number().positive(),refreshIntervalMs:z.number().positive()})
 export type Bootstrap=z.infer<typeof bootstrapSchema>
 export type Recovery=z.infer<typeof recoverySchema>
 /** Reject malformed and method-mismatched messages before dispatch. */

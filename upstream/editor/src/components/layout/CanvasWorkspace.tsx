@@ -1,3 +1,4 @@
+import {physicalWheelDelta} from '../../lib/wheel-zoom.ts';
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -9,6 +10,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize,
+  MoveHorizontal,
   Trash2,
   Copy,
   ClipboardPaste,
@@ -85,10 +87,10 @@ interface MenuState {
   elementId: string | null;
 }
 
-export const CanvasWorkspace: React.FC = () => {
+export const CanvasWorkspace: React.FC<{wheelZoomDirection?:'auto'|'standard'|'reversed'}> = ({wheelZoomDirection='auto'}) => {
   const store = useEditorStore();
   const {
-    ui, viewport, setActiveTool, zoomIn, zoomOut, zoomToFit,
+    ui, viewport, setActiveTool, zoomIn, zoomOut, zoomToFit, zoomToWidth,
     addElement, selectMultiple, deselectAll, removeElements,
     duplicateElement, updateElement, updateElements,
     copySelection, cutSelection, paste,
@@ -102,12 +104,66 @@ export const CanvasWorkspace: React.FC = () => {
   const wheelZoomFrameRef = useRef<number | null>(null);
   const wheelZoomDeltaRef = useRef(0);
   const wheelZoomAnchorRef = useRef<{ clientX: number; clientY: number } | null>(null);
+  const zoomPointRef = useRef<{clientX:number;clientY:number}|null>(null);
+  const anchorFrameRef = useRef<number|null>(null);
+  const anchorPendingRef = useRef(false);
+  const renderedZoomRef = useRef(viewport.zoom.level);
+  renderedZoomRef.current = viewport.zoom.level;
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [currentShape, setCurrentShape] = useState<ShapeType>('rectangle');
   const [shapeMenuOpen, setShapeMenuOpen] = useState(false);
 
   const zoom = viewport.zoom.level;
-  const metrics = getPageMetrics(doc.pageConfig);
+  // Capture the page point before React changes its dimensions, then restore it before paint.
+  useEffect(() => {
+    const unsubscribe = useEditorStore.subscribe((next, previous) => {
+      if(next.fitGeneration !== previous.fitGeneration || next.document.id !== previous.document.id){
+        if(anchorFrameRef.current !== null) cancelAnimationFrame(anchorFrameRef.current);
+        anchorFrameRef.current=null;anchorPendingRef.current=false;zoomPointRef.current=null;return;
+      }
+      if(next.viewport.zoom.level === previous.viewport.zoom.level) return;
+      if(anchorFrameRef.current !== null) cancelAnimationFrame(anchorFrameRef.current);
+      anchorFrameRef.current=null;anchorPendingRef.current=false;
+      const container = scrollRef.current,page = pageWrapperRefs.current[previous.activePageIndex];
+      if(!container || !page || !previous.canvasSize || next.document.id !== previous.document.id || next.fitGeneration !== previous.fitGeneration) return;
+      const area = container.getBoundingClientRect(),paper = page.getBoundingClientRect();
+      const point = zoomPointRef.current ?? {clientX:area.left+container.clientWidth/2,clientY:area.top+container.clientHeight/2};
+      zoomPointRef.current = null;
+      const x = (point.clientX-paper.left)/renderedZoomRef.current,y = (point.clientY-paper.top)/renderedZoomRef.current;
+      const anchorX = point.clientX-area.left,anchorY = point.clientY-area.top;
+      anchorPendingRef.current = true;
+      anchorFrameRef.current = requestAnimationFrame(() => {
+        anchorFrameRef.current = null;
+        anchorPendingRef.current = false;
+        if(!page.isConnected) return;
+        const currentArea = container.getBoundingClientRect(),currentPaper = page.getBoundingClientRect(),level = useEditorStore.getState().viewport.zoom.level;
+        container.scrollLeft = Math.max(0,container.scrollLeft+currentPaper.left+x*level-currentArea.left-anchorX);
+        container.scrollTop = Math.max(0,container.scrollTop+currentPaper.top+y*level-currentArea.top-anchorY);
+      });
+    });
+    return () => {unsubscribe();if(anchorFrameRef.current !== null)cancelAnimationFrame(anchorFrameRef.current);anchorPendingRef.current=false};
+  }, []);
+
+  // The scroll area excludes sidebars, toolbar and the optional assistant pane.
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const measure = () => useEditorStore.getState().resizeCanvas(container.clientWidth, container.clientHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [doc.id, activePageIndex, doc.pageConfig, doc.pages[activePageIndex]?.config, store.fitMode]);
+
+  useEffect(() => {
+    if (store.fitMode === 'manual' || anchorPendingRef.current) return;
+    const container = scrollRef.current;
+    const page = pageWrapperRefs.current[activePageIndex];
+    if (!container || !page) return;
+    container.scrollLeft = 0;
+    container.scrollTop = Math.max(0, page.offsetTop - container.offsetTop - 24);
+  }, [zoom, store.fitMode, store.fitGeneration]);
+
   const hasSelection = selection.selectedIds.length > 0;
   const multiSelection = selection.selectedIds.length >= 2;
 
@@ -147,21 +203,10 @@ export const CanvasWorkspace: React.FC = () => {
       );
       if (Math.abs(nextZoom - currentZoom) < 0.001) return;
 
-      const rect = container.getBoundingClientRect();
-      const anchorX = clientX - rect.left;
-      const anchorY = clientY - rect.top;
-      const ratio = nextZoom / currentZoom;
-      const nextScrollLeft = (container.scrollLeft + anchorX) * ratio - anchorX;
-      const nextScrollTop = (container.scrollTop + anchorY) * ratio - anchorY;
-
+      zoomPointRef.current = {clientX,clientY};
       setZoom(nextZoom);
-      requestAnimationFrame(() => {
-        container.scrollLeft = Math.max(0, nextScrollLeft);
-        container.scrollTop = Math.max(0, nextScrollTop);
-        detectActivePage();
-      });
     },
-    [detectActivePage, setZoom]
+    [setZoom]
   );
 
   useEffect(() => {
@@ -195,7 +240,7 @@ export const CanvasWorkspace: React.FC = () => {
       event.preventDefault();
       event.stopPropagation();
 
-      wheelZoomDeltaRef.current += event.deltaY;
+      wheelZoomDeltaRef.current += physicalWheelDelta(event,wheelZoomDirection);
       wheelZoomAnchorRef.current = { clientX: event.clientX, clientY: event.clientY };
       if (wheelZoomFrameRef.current !== null) return;
 
@@ -221,7 +266,7 @@ export const CanvasWorkspace: React.FC = () => {
       wheelZoomDeltaRef.current = 0;
       wheelZoomAnchorRef.current = null;
     };
-  }, [zoomAtPoint]);
+  }, [zoomAtPoint,wheelZoomDirection]);
 
   // ============================================================
   // 画布回调 (按页)
@@ -512,6 +557,7 @@ export const CanvasWorkspace: React.FC = () => {
             {Math.round(zoom * 100)}%
           </motion.span>
           <ToolbarIcon title="放大" onClick={zoomIn}><ZoomIn className="w-4 h-4" /></ToolbarIcon>
+          <ToolbarIcon title="适应宽度" onClick={zoomToWidth}><MoveHorizontal className="w-3.5 h-3.5" /></ToolbarIcon>
           <ToolbarIcon title="适应窗口" onClick={zoomToFit}><Maximize className="w-3.5 h-3.5" /></ToolbarIcon>
         </div>
       </div>
@@ -520,22 +566,24 @@ export const CanvasWorkspace: React.FC = () => {
       <div
         ref={setRefs}
         onScroll={detectActivePage}
-        className={`canvas-workspace flex-1 flex flex-col items-center overflow-auto py-8 gap-6 ${
+        className={`canvas-workspace flex-1 flex flex-col overflow-auto ${
           isOver ? 'ring-2 ring-inset ring-primary/30 bg-primary/5' : ''
         }`}
       >
-        {doc.pages.map((page, pageIndex) => (
-          <div key={page.id} className="flex flex-col items-center">
+        {doc.pages.map((page, pageIndex) => {
+          const pageConfig = { ...doc.pageConfig, ...page.config };
+          const pageMetrics = getPageMetrics(pageConfig);
+          return <div key={page.id} className="fr-canvas-page flex flex-col items-center">
             <div
               ref={(node) => { pageWrapperRefs.current[pageIndex] = node; }}
               className={`shadow-2xl rounded-sm relative bg-white transition-shadow ${
                 pageIndex === activePageIndex ? 'ring-2 ring-primary/40' : ''
               }`}
-              style={{ width: metrics.widthPx * zoom, height: metrics.heightPx * zoom }}
+              style={{ width: pageMetrics.widthPx * zoom, height: pageMetrics.heightPx * zoom }}
             >
               <ResumeCanvas
                 page={page}
-                pageConfig={doc.pageConfig}
+                pageConfig={pageConfig}
                 zoom={zoom}
                 selectedIds={selection.selectedIds}
                 activeTool={ui.activeTool}
@@ -563,7 +611,7 @@ export const CanvasWorkspace: React.FC = () => {
               </span>
             </div>
           </div>
-        ))}
+        })}
       </div>
 
       {/* 右键上下文菜单 */}

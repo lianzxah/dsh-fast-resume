@@ -1,5 +1,7 @@
-# Bilingual-pair consistency record for README.md and README.zh.md.
-# Per-heading hashes of English and Chinese prose outside code blocks and generated regions.
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write plugins/fast-resume/README.md
 /:
   en: 38eb82dbbf648cdb
   zh: 31f29e928af6ffbf
@@ -31,8 +33,8 @@
   en: b996164cc1df0a33
   zh: d82b38ff48c82dc0
 /fast-resume-for-deepseek-harness/usage-examples/1-create-and-edit-a-resume:
-  en: 8557991a4117f7de
-  zh: c801f473be147410
+  en: 9e46a16583f58912
+  zh: 59d650f3bf2cc991
 /fast-resume-for-deepseek-harness/usage-examples/2-refine-it-with-your-harness-agent:
   en: 339aa2c53b3105f7
   zh: e719856ed86ce725
@@ -40,14 +42,17 @@
   en: b2e625fe3332a498
   zh: 522070be7c23f575
 /fast-resume-for-deepseek-harness/usage-examples/4-import-or-export-your-document:
-  en: e2ac6c51e852a52b
-  zh: 90fdf9a1923be75b
+  en: 87d84c3a33e0602f
+  zh: e5ff6e42bc2e20c2
 /fast-resume-for-deepseek-harness/configuration-and-storage:
-  en: 4486ce97afaa7b56
-  zh: 06f480e4e22ff3c4
+  en: 46932ba7d9d5ed6d
+  zh: cb941a15d925d7d0
 /fast-resume-for-deepseek-harness/development:
-  en: 3a50af134c1f607a
-  zh: 8d8ba1acbc45311d
+  en: 36cfa6c4356e6076
+  zh: b26241869d2d271d
+/fast-resume-for-deepseek-harness/development/local-harness-development:
+  en: 07f1ad98941f2835
+  zh: 36fae785493533f0
 /fast-resume-for-deepseek-harness/model-experience:
   en: 32409430a3c119d3
   zh: 378adcd899050001

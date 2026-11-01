@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import {pageFitZoom,pageWidthZoom} from '../lib/viewport-fit.ts';
 import type {
   EditorState,
   EditorUIState,
@@ -88,6 +89,10 @@ interface EditorActions {
   zoomIn: () => void;
   zoomOut: () => void;
   zoomToFit: () => void;
+  /** Maximize the page within the measured width, allowing vertical scrolling. */
+  zoomToWidth: () => void;
+  /** Update measured canvas space; automatic fit preserves explicit manual zoom. */
+  resizeCanvas: (width: number, height: number) => void;
 
   // 历史
   markDirty: () => void;
@@ -105,6 +110,10 @@ const MAX_HISTORY = 50;
 const cloneDoc = (doc: ResumeDocument): ResumeDocument => JSON.parse(JSON.stringify(doc));
 
 interface ExtraState {
+  /** View-only geometry; never serialized with resume content. */
+  canvasSize: { width: number; height: number } | null;
+  fitMode: 'width' | 'page' | 'manual';
+  fitGeneration: number;
   past: ResumeDocument[];
   future: ResumeDocument[];
   /** 剪贴板 (元素快照) */
@@ -221,6 +230,9 @@ const defaultUIState: EditorUIState = {
 export const useEditorStore = create<EditorStore>((set, get) => ({
   // 初始状态
   document: createDefaultDocument(),
+  canvasSize: null,
+  fitMode: 'width',
+  fitGeneration: 0,
   activePageIndex: 0,
   selection: {
     selectedIds: [],
@@ -229,7 +241,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   viewport: {
     scrollX: 0,
     scrollY: 0,
-    zoom: { level: 1, minLevel: 0.25, maxLevel: 3 },
+    zoom: { level: 1, minLevel: 0.01, maxLevel: 3 },
   },
   ui: defaultUIState,
   history: [],
@@ -246,15 +258,16 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   // 文档操作
   setDocument: (doc) =>
-    set({
+    set((state) => ({
       document: doc,
+      fitMode: state.document.id === doc.id ? state.fitMode : 'width',
       isDirty: false,
       past: [],
       future: [],
       activePageIndex: 0,
       selection: { selectedIds: [], hoveredId: null },
       documentRevision: 0,
-    }),
+    })),
   restoreDocument: (doc) =>
     set((state) => {
       const restored = cloneDoc(doc);
@@ -646,35 +659,38 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set((state) => ({ ui: { ...state.ui, snapToGrid: !state.ui.snapToGrid } })),
 
   // 缩放
-  setZoom: (level) =>
-    set((state) => ({
-      viewport: {
-        ...state.viewport,
-        zoom: { ...state.viewport.zoom, level: Math.max(0.25, Math.min(3, level)) },
-      },
-    })),
-  zoomIn: () => {
-    const { viewport } = get();
-    set({
-      viewport: {
-        ...viewport,
-        zoom: { ...viewport.zoom, level: Math.min(3, viewport.zoom.level + 0.1) },
-      },
-    });
-  },
-  zoomOut: () => {
-    const { viewport } = get();
-    set({
-      viewport: {
-        ...viewport,
-        zoom: { ...viewport.zoom, level: Math.max(0.25, viewport.zoom.level - 0.1) },
-      },
-    });
-  },
-  zoomToFit: () =>
-    set((state) => ({
-      viewport: { ...state.viewport, zoom: { ...state.viewport.zoom, level: 0.75 } },
-    })),
+  setZoom: (level) => set((state) => ({
+    fitMode: 'manual',
+    viewport: { ...state.viewport, zoom: { ...state.viewport.zoom,
+      level: Math.max(state.viewport.zoom.minLevel, Math.min(state.viewport.zoom.maxLevel, level)) } },
+  })),
+  zoomIn: () => get().setZoom(get().viewport.zoom.level + .1),
+  zoomOut: () => get().setZoom(get().viewport.zoom.level - .1),
+  zoomToFit: () => set((state) => {
+    const page = state.document.pages[state.activePageIndex];
+    const size = state.canvasSize;
+    return { fitMode: 'page', fitGeneration: state.fitGeneration + 1,
+      ...(size ? { viewport: { ...state.viewport, zoom: { ...state.viewport.zoom,
+        level: pageFitZoom({ ...state.document.pageConfig, ...page?.config }, size.width, size.height) } } } : {}),
+    };
+  }),
+  zoomToWidth: () => set((state) => {
+    const page = state.document.pages[state.activePageIndex],size = state.canvasSize;
+    return { fitMode: 'width', fitGeneration: state.fitGeneration + 1,
+      ...(size ? { viewport: { ...state.viewport, zoom: { ...state.viewport.zoom,
+        level: Math.min(state.viewport.zoom.maxLevel,pageWidthZoom({ ...state.document.pageConfig, ...page?.config },size.width)) } } } : {}),
+    };
+  }),
+  resizeCanvas: (width, height) => set((state) => {
+    if (width <= 0 || height <= 0) return state;
+    const page = state.document.pages[state.activePageIndex];
+    const config = { ...state.document.pageConfig, ...page?.config };
+    const level = state.fitMode === 'page' ? pageFitZoom(config,width,height) : Math.min(state.viewport.zoom.maxLevel,pageWidthZoom(config,width));
+    if (state.canvasSize?.width === width && state.canvasSize?.height === height && (state.fitMode === 'manual' || state.viewport.zoom.level === level)) return state;
+    return { canvasSize: { width, height }, ...(state.fitMode !== 'manual' ? {
+      viewport: { ...state.viewport, zoom: { ...state.viewport.zoom, level } },
+    } : {}) };
+  }),
 
   // 历史
   markDirty: () => set({ isDirty: true }),
