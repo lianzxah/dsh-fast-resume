@@ -1,4 +1,5 @@
 /** Resizable editor sidebars share visibility with the existing toolbar and shortcuts. */
+import type {ViewportHandle} from '../../upstream/editor/src/lib/viewport-handoff.ts'
 import React,{useLayoutEffect,useRef} from 'react'
 import {Panel,PanelGroup,PanelResizeHandle,getResizeHandleElement,type ImperativePanelHandle} from 'react-resizable-panels'
 import {LeftPanel} from '../../upstream/editor/src/components/layout/LeftPanel.tsx'
@@ -45,13 +46,13 @@ function isolateSplitterKey(event:SplitterKeyEvent){event.stopPropagation()}
  * @param wheelZoomDirection Device-aware or explicit wheel direction.
  * @returns The horizontal editor workspace.
  */
-export function WorkspacePanels({leftLabel,rightLabel,wheelZoomDirection='auto'}:{leftLabel:string;rightLabel:string;wheelZoomDirection?:'auto'|'standard'|'reversed'}){
+export function WorkspacePanels({leftLabel,rightLabel,wheelZoomDirection='auto',onViewport}:{onViewport?:(handle:ViewportHandle|null)=>void;leftLabel:string;rightLabel:string;wheelZoomDirection?:'auto'|'standard'|'reversed'}){
  const left=useSidebar('leftPanelVisible','fr-left-resize'),right=useSidebar('rightPanelVisible','fr-right-resize')
  const canvasSize=useRef(100-left.props.defaultSize-right.props.defaultSize).current
  return <PanelGroup direction="horizontal" className="h-full min-h-0">
   <Panel {...left.props} id="fr-left-panel" minSize={15} maxSize={40} order={1}><div ref={left.content} className="h-full min-h-0" hidden={!left.visible}><LeftPanel/></div></Panel>
   <PanelResizeHandle id="fr-left-resize" className="fr-resize" aria-label={leftLabel} onKeyDownCapture={left.onKeyDownCapture} onKeyDown={isolateSplitterKey}/>
-  <Panel id="fr-canvas-panel" defaultSize={canvasSize} minSize={25} order={2}><CanvasWorkspace wheelZoomDirection={wheelZoomDirection}/></Panel>
+  <Panel id="fr-canvas-panel" defaultSize={canvasSize} minSize={25} order={2}><CanvasWorkspace onViewport={onViewport} wheelZoomDirection={wheelZoomDirection}/></Panel>
   <PanelResizeHandle id="fr-right-resize" className="fr-resize" aria-label={rightLabel} onKeyDownCapture={right.onKeyDownCapture} onKeyDown={isolateSplitterKey}/>
   <Panel {...right.props} id="fr-right-panel" minSize={16} maxSize={40} order={3}><div ref={right.content} className="h-full min-h-0" hidden={!right.visible}><RightPanel/></div></Panel>
  </PanelGroup>

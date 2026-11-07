@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { Stage, Layer, Line, Rect } from 'react-konva';
 import type Konva from 'konva';
 import type {
@@ -41,6 +41,8 @@ export interface ResumeCanvasProps {
   gridSize?: number;
   /** Konva Stage 引用 (供导出使用) */
   stageRef?: React.MutableRefObject<Konva.Stage | null>;
+  /** Read rendered element rectangles in this canvas's scaled CSS coordinates. */
+  onBounds?: (read: ((id:string)=>{x:number;y:number;width:number;height:number}|undefined)|null)=>void;
   onSelectionChange: (ids: string[]) => void;
   onElementChange: (id: string, updates: Partial<ResumeElement>) => void;
   /** 一次交互结束, 提交历史 */
@@ -62,6 +64,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({
   snapToGrid = false,
   gridSize = 20,
   stageRef,
+  onBounds,
   onSelectionChange,
   onElementChange,
   onCommit,
@@ -94,6 +97,7 @@ export const ResumeCanvas: React.FC<ResumeCanvasProps> = ({
     else nodeRefs.current.delete(id);
   }, []);
 
+  useEffect(()=>{onBounds?.(id=>nodeRefs.current.get(id)?.getClientRect());return()=>onBounds?.(null)},[onBounds]);
   const getNode = useCallback((id: string) => nodeRefs.current.get(id), []);
 
   // ---- 选择 ----

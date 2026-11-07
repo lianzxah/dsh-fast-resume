@@ -1,5 +1,8 @@
+import {paintFeedback} from '../../lib/canvas-feedback.ts';
+import {flushSync} from 'react-dom';
+import {captureViewport,restoreViewport,type ViewportHandle} from '../../lib/viewport-handoff.ts';
 import {physicalWheelDelta} from '../../lib/wheel-zoom.ts';
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   MousePointer2,
@@ -87,7 +90,7 @@ interface MenuState {
   elementId: string | null;
 }
 
-export const CanvasWorkspace: React.FC<{wheelZoomDirection?:'auto'|'standard'|'reversed'}> = ({wheelZoomDirection='auto'}) => {
+export const CanvasWorkspace: React.FC<{wheelZoomDirection?:'auto'|'standard'|'reversed';onViewport?:(handle:ViewportHandle|null)=>void}> = ({wheelZoomDirection='auto',onViewport}) => {
   const store = useEditorStore();
   const {
     ui, viewport, setActiveTool, zoomIn, zoomOut, zoomToFit, zoomToWidth,
@@ -107,6 +110,7 @@ export const CanvasWorkspace: React.FC<{wheelZoomDirection?:'auto'|'standard'|'r
   const zoomPointRef = useRef<{clientX:number;clientY:number}|null>(null);
   const anchorFrameRef = useRef<number|null>(null);
   const anchorPendingRef = useRef(false);
+  const checkpointRestoreRef = useRef(false);
   const renderedZoomRef = useRef(viewport.zoom.level);
   renderedZoomRef.current = viewport.zoom.level;
   const [menu, setMenu] = useState<MenuState | null>(null);
@@ -117,7 +121,7 @@ export const CanvasWorkspace: React.FC<{wheelZoomDirection?:'auto'|'standard'|'r
   // Capture the page point before React changes its dimensions, then restore it before paint.
   useEffect(() => {
     const unsubscribe = useEditorStore.subscribe((next, previous) => {
-      if(next.fitGeneration !== previous.fitGeneration || next.document.id !== previous.document.id){
+      if(checkpointRestoreRef.current || next.fitGeneration !== previous.fitGeneration || next.document.id !== previous.document.id){
         if(anchorFrameRef.current !== null) cancelAnimationFrame(anchorFrameRef.current);
         anchorFrameRef.current=null;anchorPendingRef.current=false;zoomPointRef.current=null;return;
       }
@@ -145,7 +149,7 @@ export const CanvasWorkspace: React.FC<{wheelZoomDirection?:'auto'|'standard'|'r
   }, []);
 
   // The scroll area excludes sidebars, toolbar and the optional assistant pane.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
     const measure = () => useEditorStore.getState().resizeCanvas(container.clientWidth, container.clientHeight);
@@ -156,13 +160,30 @@ export const CanvasWorkspace: React.FC<{wheelZoomDirection?:'auto'|'standard'|'r
   }, [doc.id, activePageIndex, doc.pageConfig, doc.pages[activePageIndex]?.config, store.fitMode]);
 
   useEffect(() => {
-    if (store.fitMode === 'manual' || anchorPendingRef.current) return;
+    if (checkpointRestoreRef.current || store.fitMode === 'manual' || anchorPendingRef.current) return;
     const container = scrollRef.current;
     const page = pageWrapperRefs.current[activePageIndex];
     if (!container || !page) return;
     container.scrollLeft = 0;
     container.scrollTop = Math.max(0, page.offsetTop - container.offsetTop - 24);
   }, [zoom, store.fitMode, store.fitGeneration]);
+
+  const bounds=useRef(new Map<string,(id:string)=>{x:number;y:number;width:number;height:number}|undefined>());
+  useLayoutEffect(() => {
+    const lifetime=new AbortController();
+    const nodes=()=>{const container=scrollRef.current,page=pageWrapperRefs.current[useEditorStore.getState().activePageIndex];if(!container||!page)throw Error('Canvas is not mounted');return{container,page,state:useEditorStore.getState()}};
+    onViewport?.({feedback:(ids,locate)=>{const current=useEditorStore.getState();for(const [index,page]of current.document.pages.entries()){const wrapper=pageWrapperRefs.current[index];if(!wrapper)continue;const rectangles=ids.flatMap(id=>{if(id===page.id)return[{id,x:0,y:0,width:wrapper.clientWidth,height:wrapper.clientHeight}];const box=bounds.current.get(page.id)?.(id);return box?[{id,...box}]:[]});if(rectangles.length){paintFeedback(wrapper,rectangles,lifetime.signal);if(locate){current.setActivePage(index);const container=scrollRef.current,rect=rectangles[0];if(container){const paper=wrapper.getBoundingClientRect(),area=container.getBoundingClientRect();container.scrollLeft+=paper.left+rect.x+rect.width/2-area.left-container.clientWidth/2;container.scrollTop+=paper.top+rect.y+rect.height/2-area.top-container.clientHeight/2}break}}}},capture:()=>{const {container,page,state}=nodes();return captureViewport(container,page,state.viewport.zoom.level)},restore:(position,signal)=>new Promise<void>((resolve,reject)=>{
+      const combined=AbortSignal.any([signal,lifetime.signal]);
+      if(combined.aborted){reject(Error('Canvas restore cancelled'));return}
+      checkpointRestoreRef.current=true;
+      if(anchorFrameRef.current!==null)cancelAnimationFrame(anchorFrameRef.current);
+      anchorFrameRef.current=null;anchorPendingRef.current=false;zoomPointRef.current=null;
+      const abort=()=>{cancelAnimationFrame(frame);checkpointRestoreRef.current=false;reject(Error('Canvas restore cancelled'))};
+      const frame=requestAnimationFrame(()=>{combined.removeEventListener('abort',abort);try{flushSync(()=>{const {container,state}=nodes();state.resizeCanvas(container.clientWidth,container.clientHeight)});const {container,page,state}=nodes();restoreViewport(container,page,state.viewport.zoom.level,position,state.fitMode==='manual');resolve()}catch(error){reject(error)}finally{checkpointRestoreRef.current=false}});
+      combined.addEventListener('abort',abort,{once:true});
+    })});
+    return()=>{lifetime.abort();onViewport?.(null)};
+  },[onViewport]);
 
   const hasSelection = selection.selectedIds.length > 0;
   const multiSelection = selection.selectedIds.length >= 2;
@@ -582,6 +603,7 @@ export const CanvasWorkspace: React.FC<{wheelZoomDirection?:'auto'|'standard'|'r
               style={{ width: pageMetrics.widthPx * zoom, height: pageMetrics.heightPx * zoom }}
             >
               <ResumeCanvas
+                onBounds={read=>{if(read)bounds.current.set(page.id,read);else bounds.current.delete(page.id)}}
                 page={page}
                 pageConfig={pageConfig}
                 zoom={zoom}

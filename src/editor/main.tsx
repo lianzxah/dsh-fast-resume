@@ -15,7 +15,7 @@ const listener=(event:MessageEvent)=>{
  if(connected||event.source!==parent||event.data?.kind!=='fast-resume-connect'||event.data?.nonce!==config.nonce||event.ports.length!==1)return
  connected=true;window.removeEventListener('message',listener);port=event.ports[0]
  if(config.mode==='editor'){
-  bridge=new PortBridge(port,config.bridgeTimeoutMs);root.render(<App api={createEditorApi(bridge,config)}/>)
+  let api:ReturnType<typeof createEditorApi>;bridge=new PortBridge(port,config.bridgeTimeoutMs,{generation:config.nonce,role:'editor',handle:(method,args,signal)=>api.receive(method,args,signal)});api=createEditorApi(bridge,config);root.render(<App api={api}/>)
  }else {
   let active=false
   port.onmessage=async event=>{

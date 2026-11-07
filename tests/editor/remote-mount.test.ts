@@ -26,13 +26,13 @@ describe('published Gateway namespace admission',()=>{
    let checked=0
    const owner=ctx.plugin({inject:['remote'],async apply(scope:Context){
     await ownRemoteLifetime(scope,TYPERT_REMOTE,['remote.fastResume'],async consumer=>{
-     expect(TYPERT_REMOTE.descriptors).toHaveLength(20)
+     expect(TYPERT_REMOTE.descriptors.map(value=>value.method).sort()).toEqual(['applyProposal','beginAssistantHandoff','bindAssistantContext','changeReceipt','create','deleteResume','duplicate','editorAcknowledge','editorActivate','editorAssets','editorClaim','editorDisconnect','editorPoll','editorReconcile','editorRecover','editorRegister','editorRollback','editorTransfer','editorTransferRead','exportDocument','history','importDocument','list','propose','read','readAssistantHandoff','readContext','recordAssistantSession','rename','rendererComplete','rendererPoll','rendererRegister','rendererUnregister','restore','revert','save','saveInSession','uiMutation','versionRead'].sort())
      for(const descriptor of TYPERT_REMOTE.descriptors){expect(typeof Reflect.get(consumer.remote.fastResume,descriptor.method)).toBe('function');checked++}
      return async()=>{}
     })
    }})
    await owner
-   expect(checked).toBe(20)
+   expect(checked).toBe(TYPERT_REMOTE.descriptors.length)
    await owner.dispose()
   }finally{await ctx.fiber.dispose()}
  })

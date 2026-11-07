@@ -13,7 +13,7 @@ export function DocumentPreview({json,label}:{json:string;label:string}){
  return <section className="fr-preview"><h4>{label}</h4>{error?<p role="alert">{error}</p>:pages.map((url,i)=><img key={i} src={url} alt={`${label} ${i+1}`} />)}</section>
 }
 export function Assistant({api,snapshot,selectedIds,dirty,copy,run,refresh,associate}:{api:EditorApi;snapshot:ResumeSnapshot;selectedIds:string[];dirty:boolean;copy:Copy;run:(work:()=>Promise<void>)=>void;refresh:()=>Promise<void>;associate:(sessionId:string)=>Promise<ResumeSnapshot>}){
- const [instruction,setInstruction]=useState(''),[history,setHistory]=useState<HistoryView|null>(null),[review,setReview]=useState<string|null>(null),[session,setSession]=useState(snapshot.sessionId),[error,setError]=useState(''),[pending,setPending]=useState(false)
+ const [instruction,setInstruction]=useState(''),[history,setHistory]=useState<HistoryView|null>(null),[review,setReview]=useState<string|null>(null),[session,setSession]=useState(api.config.launch?.sessionId??snapshot.sessionId),[error,setError]=useState(''),[pending,setPending]=useState(false)
  const load=async()=>{setHistory(await api.history(snapshot.id));setError('')}
  useEffect(()=>{let active=true;void api.history(snapshot.id).then(value=>{if(active)setHistory(value)}).catch(e=>{if(active)setError(`${copy.error} ${e instanceof Error?e.message:''}`)});return()=>{active=false}},[snapshot.id,snapshot.revision,api])
  const prompt=()=>{setPending(true);run(async()=>{try{if(dirty)throw Error(copy.dirtyPrompt);await sendResumePrompt({snapshot,text:instruction,selectedIds,sessionId:session},{createSession:api.createSession,associate,prompt:api.prompt,onSession:setSession});setInstruction('');await refresh()}finally{setPending(false)}})}

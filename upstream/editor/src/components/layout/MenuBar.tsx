@@ -51,7 +51,7 @@ interface MenuItem {
   separator?: boolean;
 }
 
-export const MenuBar: React.FC<{ onExport: (format: 'json' | 'png' | 'pdf') => void; onImport: () => void; labels: {save:string;versions:string;showLeft:string;showRight:string} }> = ({ onExport, onImport, labels }) => {
+export const MenuBar: React.FC<{ onAssistant?: () => void; assistantLabel?:string; onHome?: () => void; onExport: (format: 'json' | 'png' | 'pdf') => void; onImport: () => void; labels: {save:string;versions:string;showLeft:string;showRight:string} }> = ({ onAssistant, assistantLabel, onHome, onExport, onImport, labels }) => {
   const store = useEditorStore();
   const { isDirty, selection, ui } = store;
   const navigate = useNavigate();
@@ -88,7 +88,7 @@ export const MenuBar: React.FC<{ onExport: (format: 'json' | 'png' | 'pdf') => v
         label: '返回首页',
         icon: <Home className="w-3.5 h-3.5" />,
         action: () => {
-          navigate('/');
+          if (onHome) onHome(); else navigate('/');
           closeMenu();
         },
       },
@@ -279,11 +279,11 @@ export const MenuBar: React.FC<{ onExport: (format: 'json' | 'png' | 'pdf') => v
         },
       },
       {
-        label: `${ui.bottomPanelVisible ? '✓ ' : ''}AI 助手`,
+        label: onAssistant ? assistantLabel ?? 'AI 助手' : `${ui.bottomPanelVisible ? '✓ ' : ''}AI 助手`,
         icon: <MessageSquare className="w-3.5 h-3.5" />,
         shortcut: 'Ctrl+J',
         action: () => {
-          store.toggleBottomPanel();
+          (onAssistant ?? store.toggleBottomPanel)();
           closeMenu();
         },
       },
@@ -446,7 +446,7 @@ export const MenuBar: React.FC<{ onExport: (format: 'json' | 'png' | 'pdf') => v
       const ctrl = e.ctrlKey || e.metaKey;
       const shift = e.shiftKey;
       const tag = (document.activeElement as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || document.querySelector('[role="dialog"]')) return;
+      if (e.isComposing || e.keyCode === 229 || (document.activeElement instanceof HTMLElement && document.activeElement.isContentEditable) || tag === 'INPUT' || tag === 'TEXTAREA' || document.querySelector('[role="dialog"]')) return;
 
       if (ctrl && e.key === 'o') {
         e.preventDefault();
@@ -470,7 +470,7 @@ export const MenuBar: React.FC<{ onExport: (format: 'json' | 'png' | 'pdf') => v
       }
       if (ctrl && e.key === 'j') {
         e.preventDefault();
-        store.toggleBottomPanel();
+        (onAssistant ?? store.toggleBottomPanel)();
       }
       if (ctrl && e.key === '=') {
         e.preventDefault();
@@ -500,7 +500,7 @@ export const MenuBar: React.FC<{ onExport: (format: 'json' | 'png' | 'pdf') => v
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [onAssistant]);
 
   return (
     <>

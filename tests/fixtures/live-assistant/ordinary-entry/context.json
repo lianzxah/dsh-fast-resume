@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "context": {
+    "schemaVersion": 1,
+    "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+    "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+    "updatedAt": "2026-11-01T14:14:43.722Z",
+    "source": "explicit-tool"
+  },
+  "bindings": [
+    {
+      "requestId": "qa-synth-select-662c4fd1-r14",
+      "fingerprint": "903476e272b1fd7c9d8d34ba43b5c0f926512d1e3369d3e296125abaec7a093f",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+        "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+        "updatedAt": "2026-11-01T07:07:51.595Z",
+        "source": "explicit-tool"
+      },
+      "revision": 14
+    },
+    {
+      "requestId": "c7f097a97c267139324ef13657503aec18b90264afbdb4fc810edaace5e073a1",
+      "fingerprint": "d1f8473b7b44ca011ce131a13ab429e46b35731be9dd1cbd9c8fbe94b8dc6e52",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+        "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+        "updatedAt": "2026-11-01T07:07:57.015Z",
+        "source": "committed-edit"
+      },
+      "revision": 15
+    },
+    {
+      "requestId": "f5671299c63fa0ff3c3d06e7f9a8d0a5c062ec2a669b7970d42e805d1ba81224",
+      "fingerprint": "914ab29e126fc8e4b69f98e62464f3d1625e8c7107f65acddc713866e91d2c84",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+        "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+        "updatedAt": "2026-11-01T07:33:44.793Z",
+        "source": "committed-edit"
+      },
+      "revision": 17
+    },
+    {
+      "requestId": "cd4f9afef04ffab3db1cd78bd176a3c16d3fb8d7de8daa7f8a7ea2b07c24e7b8",
+      "fingerprint": "fdfd66735c52ae5c4395eb325b3510f9feb772dc47eee997fcb435d5330cb956",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+        "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+        "updatedAt": "2026-11-01T07:56:33.494Z",
+        "source": "committed-edit"
+      },
+      "revision": 19
+    },
+    {
+      "requestId": "manual-save:23c067bf-38cb-4625-8090-c63b4da4d4be",
+      "fingerprint": "43997a390efde53c3beb7b0cb402cb6a574e4846056c3b3aa09eaae58b3e3eed",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+        "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+        "updatedAt": "2026-11-01T13:25:15.683Z",
+        "source": "committed-edit"
+      },
+      "revision": 34
+    },
+    {
+      "requestId": "manual-save:18882fd8-ac98-45e3-a7d2-41ddef29b692",
+      "fingerprint": "ac451c5ca06d476b84db1b55773353f3c8c519a2a644a8043a45a520e60e845c",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+        "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+        "updatedAt": "2026-11-01T13:26:14.362Z",
+        "source": "committed-edit"
+      },
+      "revision": 35
+    },
+    {
+      "requestId": "qa-ordinary-loop-ack-r35",
+      "fingerprint": "0dda0fde1560b91b569c6d1bbabbbab5f40b0005b13e809d27af6aaa2945e0be",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+        "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+        "updatedAt": "2026-11-01T14:13:55.836Z",
+        "source": "explicit-tool"
+      },
+      "revision": 35
+    },
+    {
+      "requestId": "qa-ordinary-loop-ack-r35-b",
+      "fingerprint": "7ff5af8aae18b84fb6f01e9e3ac8d01a065227f929a2551553c28503f4a5181f",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5",
+        "resumeId": "662c4fd1-e1e2-4601-94f1-32ae1384437e",
+        "updatedAt": "2026-11-01T14:14:43.722Z",
+        "source": "explicit-tool"
+      },
+      "revision": 35
+    }
+  ]
+}

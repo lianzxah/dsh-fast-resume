@@ -5,6 +5,8 @@ import {mkdtemp,mkdir,readFile,writeFile,readdir,copyFile} from 'node:fs/promise
 import {tmpdir} from 'node:os'
 import {join,resolve} from 'node:path'
 import assert from 'node:assert/strict'
+import { rm } from 'node:fs/promises'
+import { verifyAssistantScenarios } from './verify-assistant-scenarios.mjs'
 
 const cli=process.env.DSH_TEST_CLI,replay=process.env.DSH_TEST_REPLAY
 if(!cli||!replay||!process.argv[2])throw Error('Set DSH_TEST_CLI and DSH_TEST_REPLAY to the installed same-version public entries; pass the plugin .tgz path')
@@ -12,6 +14,7 @@ const fixture=resolve(import.meta.dirname,'../tests/fixtures/live-read')
 const [seed,prompt,expected]=await Promise.all(['resume.json','prompt.txt','expected.json'].map(file=>readFile(join(fixture,file),'utf8')))
 const envelope=JSON.parse(seed),expectedOutput=JSON.parse(expected)
 const root=await mkdtemp(join(tmpdir(),'fast-resume-recorded-'))
+try {
 const env={...process.env,DSH_HOME:join(root,'home'),DSH_AGENTS_HOME:join(root,'agents'),DSH_TELEMETRY_DISABLED:'1',DSH_TOOLS_MODE:'native'}
 delete env.DEEPSEEK_API_KEY;delete env.DEEPSEEK_BASE_URL
 const run=promisify(execFile)
@@ -46,3 +49,9 @@ assert.deepEqual(projection,expectedOutput,'Actual Session behavior must match t
 assert.deepEqual(JSON.parse(await readFile(join(storage,`${envelope.document.id}.json`),'utf8')),envelope,'Read-only replay must retain the seeded resume')
 await writeFile(join(root,'verification.json'),JSON.stringify({source:'recorded-live-model',providerIO:false,...projection},null,2)+'\n')
 process.stdout.write(`PASS: recorded live Session replay, real installed resume_read, image-byte redaction and expected output\nEvidence: ${root}\n`)
+
+await verifyAssistantScenarios({ root, invoke, replay, mode: 'recorded' })
+} finally {
+ if(process.env.DSH_TEST_KEEP === '1')console.log('Retained isolated evidence:',root)
+ else await rm(root,{recursive:true,force:true})
+}

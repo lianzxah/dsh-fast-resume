@@ -39,14 +39,14 @@ beforeEach(()=>{
 afterEach(async()=>{if(root)await act(async()=>root?.unmount());root=undefined;close();useEditorStore.setState(initial);document.body.replaceChildren();vi.restoreAllMocks();vi.unstubAllGlobals()})
 async function mount(left=true,right=true){
  useEditorStore.setState({ui:{...initial.ui,leftPanelVisible:left,rightPanelVisible:right}})
- const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000),api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',refreshIntervalMs:200000});close=()=>{bridge.close();port2.close()}
+ const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000),api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',maxAssistantCheckpointBytes:67108864,editorPollIntervalMs:1000,refreshIntervalMs:200000});close=()=>{bridge.close();port2.close()}
  const doc={...initial.document,id:'panels',metadata:{...initial.document.metadata,title:'Synthetic panels'}}
  const snapshot={id:resumeIdSchema.parse('panels'),revision:resumeRevisionSchema.parse(4),title:'Synthetic panels',documentJson:JSON.stringify(doc),pageCount:doc.pages.length,updatedAt:'2026-10-18T00:00:00Z'}
- vi.spyOn(api,'list').mockResolvedValue([snapshot]);vi.spyOn(api,'read').mockResolvedValue(snapshot);vi.spyOn(api,'recovery').mockResolvedValue([])
+ vi.spyOn(api,'list').mockResolvedValue([snapshot]);vi.spyOn(api,'read').mockResolvedValue(snapshot);vi.spyOn(api,'register').mockResolvedValue({token:'00000000-0000-4000-8000-000000000001' as import('../../src/types.ts').EditorToken,uncertain:false});vi.spyOn(api,'disconnect').mockResolvedValue(true);vi.spyOn(api,'poll').mockResolvedValue(null);vi.spyOn(api,'recovery').mockResolvedValue([])
  const save=vi.spyOn(api,'save'),backup=vi.spyOn(api,'backup')
  const container=document.createElement('div');document.body.append(container);root=createRoot(container)
  await act(async()=>root?.render(React.createElement(App,{api})));await act(async()=>button('Synthetic panels').click())
- return {save,backup}
+ return {save,backup,api}
 }
 it('snaps either sidebar closed through native pointer resizing and restores its last expanded size from the toolbar',async()=>{
  const{save,backup}=await mount(),documentBefore=useEditorStore.getState().document,selectionBefore=useEditorStore.getState().selection
@@ -61,7 +61,7 @@ it('snaps either sidebar closed through native pointer resizing and restores its
  expect(useEditorStore.getState().document).toBe(documentBefore);expect(useEditorStore.getState().selection).toBe(selectionBefore);expect(useEditorStore.getState().isDirty).toBe(false);expect(save).not.toHaveBeenCalled();expect(backup).not.toHaveBeenCalled()
 })
 it('synchronizes native splitter keyboard collapse and expansion with toolbar and shortcut visibility',async()=>{
- const{save,backup}=await mount()
+ const{save,backup,api}=await mount(),assistant=vi.spyOn(api,'assistant').mockResolvedValue(true)
  const element=createShapeElement('rectangle',{id:'selected-live-layer',left:10,top:20}),store=useEditorStore.getState()
  await act(async()=>{store.setDocument({...store.document,pages:[{...store.document.pages[0]!,elements:[element]}]});store.selectMultiple([element.id])})
  const documentBefore=useEditorStore.getState().document,canvasBefore=panels()[1]!.firstElementChild
@@ -76,8 +76,8 @@ it('synchronizes native splitter keyboard collapse and expansion with toolbar an
  await act(async()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'b',ctrlKey:true,bubbles:true,cancelable:true})));expect(size(0)).toBe(0)
  await act(async()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'b',ctrlKey:true,bubbles:true,cancelable:true})));expect(size(0)).toBeGreaterThan(0)
  await act(async()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'.',ctrlKey:true,bubbles:true,cancelable:true})));expect(size(2)).toBe(0)
- await act(async()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'j',ctrlKey:true,bubbles:true,cancelable:true})));expect(useEditorStore.getState().ui.bottomPanelVisible).toBe(true);expect(panels()[1]!.firstElementChild).toBe(canvasBefore)
- await act(async()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'j',ctrlKey:true,bubbles:true,cancelable:true})));expect(useEditorStore.getState().ui.bottomPanelVisible).toBe(false);expect(panels()[1]!.firstElementChild).toBe(canvasBefore)
+ await act(async()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'j',ctrlKey:true,bubbles:true,cancelable:true})));expect(useEditorStore.getState().ui.bottomPanelVisible).toBe(false);expect(assistant).toHaveBeenCalledTimes(1);expect(panels()[1]!.firstElementChild).toBe(canvasBefore)
+ await act(async()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'j',ctrlKey:true,bubbles:true,cancelable:true})));expect(useEditorStore.getState().ui.bottomPanelVisible).toBe(false);expect(assistant).toHaveBeenCalledTimes(2);expect(panels()[1]!.firstElementChild).toBe(canvasBefore)
  expect(useEditorStore.getState().document).toBe(documentBefore);expect(useEditorStore.getState().isDirty).toBe(false);expect(save).not.toHaveBeenCalled();expect(backup).not.toHaveBeenCalled()
 })
 it.each([[false,true],[true,false],[false,false]])('preserves initially hidden sides (%s, %s) and can reopen them',async(left,right)=>{

@@ -10,3 +10,6 @@ export const resumeRevisionSchema=z.number().int().positive().safe().transform(b
 export const versionIdSchema=z.string().min(1).max(256).transform(brandString<ResumeVersionId>)
 /** Durable proposal identity. */
 export const proposalIdSchema=z.string().min(1).max(256).transform(brandString<ResumeProposalId>)
+
+/** Session identities validated at persisted and Remote inputs; filenames use their hash. */
+export const resumeSessionIdSchema=z.string().min(1).max(256).transform(brandString<import('@deepseek-ai/dsh-session/types').SessionId>)

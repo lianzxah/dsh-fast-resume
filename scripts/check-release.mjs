@@ -15,10 +15,12 @@ try {
   await rm(cache, { recursive: true, force: true })
 }
 const files = new Set(packed.files.map(file => file.path))
-for (const path of ['lib/index.js', 'lib/tools.js', 'lib/client.js', 'lib/typert.host.js', 'lib/typert.remote-client.js', 'assets/editor.html', 'locale/en.json', 'locale/zh.json', 'cordis.patch.yml', 'LICENSE', 'NOTICE', 'COMMERCIAL_LICENSE.md', 'README.md', 'README.zh.md', 'upstream-content.json']) {
+for (const path of ['lib/index.js', 'lib/tools.js', 'lib/client.js', 'lib/typert.host.js', 'lib/typert.remote-client.js', 'assets/editor.html', 'locale/en.json', 'locale/zh.json', 'cordis.patch.yml', 'LICENSE', 'NOTICE', 'COMMERCIAL_LICENSE.md', 'README.md', 'README.zh.md', 'upstream-content.json', 'docs/images/resume-ai-review.png']) {
   assert.ok(files.has(path), `Publication is missing ${path}`)
   assert.ok((await stat(path)).size > 0, `Publication contains empty ${path}`)
 }
+assert.deepEqual(Object.keys(manifest.exports).sort(), ['.','./client','./types','./typert','./remote','./package.json','./locale/*.json','./tools'].sort())
+assert.equal(manifest.engines.node, '^22.19.0 || >=24.0.0')
 assert.equal(manifest.type, 'module')
 assert.equal(manifest.license, 'PolyForm-Noncommercial-1.0.0')
 assert.equal(manifest.dsh?.bundle?.patch, './cordis.patch.yml')
@@ -39,7 +41,7 @@ for (const path of files) {
   assert.ok(!/(?:^|\/)(?:node_modules|\.env(?:\.[^/]*)?|\.git|\.credentials[^/]*)(?:\/|$)|\.(?:db|sqlite|sqlite3)$/.test(path), `Private or installed data is included: ${path}`)
   if (path.endsWith('.js') || path === 'assets/editor.html') {
     const text = await readFile(path, 'utf8')
-    assert.ok(!text.includes('/Users/Shared/workspace/Fast-Resume') && !text.includes('/Users/Shared/harness-workspace/'), `Runtime requires an absolute source directory: ${path}`)
+    assert.ok(!/(?:\/Users\/|\/home\/)[^\s"']+/.test(text), `Runtime requires an absolute source directory: ${path}`)
     assert.ok(!/\/api\/(?:auth|resumes|import)\//.test(text), `Runtime still calls the original server: ${path}`)
   }
 }

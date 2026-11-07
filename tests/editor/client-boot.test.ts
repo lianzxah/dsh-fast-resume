@@ -6,8 +6,9 @@ import type {ConnectionHandle} from '@deepseek-ai/dsh-client-connection/client'
 import {apply,inject} from '../../src/client/index.tsx'
 /** Real Context/Gateway with only UI presentation seats replaced; no browser or model connection is opened. */
 describe('Client plugin activation',()=>{
- it('activates explicitly injected consumers and drains renderer before unmount',async()=>{
-  const browser=new EventTarget(),original=Object.getOwnPropertyDescriptor(globalThis,'window')
+ it.each(['available','getter-denied'] as const)('activates explicitly injected consumers and drains renderer with %s tab storage',async mode=>{
+  const storage=Object.getOwnPropertyDescriptor(globalThis,'sessionStorage');Object.defineProperty(globalThis,'sessionStorage',mode==='getter-denied'?{get:()=>{throw new DOMException('Storage denied','SecurityError')},configurable:true}:{value:{getItem:()=>null,setItem:()=>{},removeItem:()=>{}},configurable:true})
+  const browser=Object.assign(new EventTarget(),{matchMedia:()=>({matches:true})}),original=Object.getOwnPropertyDescriptor(globalThis,'window')
   Object.defineProperty(globalThis,'window',{value:browser,writable:true,configurable:true})
   const ctx=new Context(),entries:string[]=[],calls:string[]=[]
   try{
@@ -22,11 +23,13 @@ describe('Client plugin activation',()=>{
    ctx.provide('slots',{inject:(_name:string,setup:()=>unknown)=>setup(),register:(entry:{name:string;key?:string;id?:string})=>{entries.push(`${entry.name}:${entry.key??entry.id}`);return()=>{}}})
    ctx.provide('locale',{register:()=>()=>{},getSnapshot:()=>({active:'en'}),bind:()=>()=>''})
    ctx.provide('layout',{})
-   ctx.provide('uiWorkspace',{})
+   ctx.provide('uiConversation',{events:{register:()=>()=>{}}});ctx.provide('uiWorkspace',{});ctx.provide('sessions',{});ctx.provide('workspaces',{})
+   ctx.provide('sidebarRight',{mounted:{getSnapshot:()=>undefined,subscribe:()=>()=>{}},openResource:()=>{}})
+   ctx.provide('sidebarRightTabs',{register:()=>()=>{}})
    const owner=ctx.plugin({inject,apply});await owner
    await vi.waitFor(()=>expect(calls).toContain('fastResume/rendererPoll'))
-   expect(entries).toEqual(['main:fast-resume','sidebar.panellist:fast-resume'])
+   expect(entries).toEqual([...['resume_context','resume_list','resume_create','resume_read','resume_edit','resume_propose','resume_apply','resume_revert','resume_history','resume_restore','resume_export'].map(name=>`tool.call.toolview:${name}`),'sidebar.right.pane.tab:fast-resume.document','conversation.session.header.actions:fast-resume.open','shell.overlay:fast-resume.entry','shell.overlay:fast-resume.activity','main:fast-resume','sidebar.panellist:fast-resume'])
    await owner.dispose();expect(calls).toContain('fastResume/rendererUnregister');expect(ctx.get('remote.fastResume')).toBeUndefined()
-  }finally{await ctx.fiber.dispose();if(original)Object.defineProperty(globalThis,'window',original);else Reflect.deleteProperty(globalThis,'window')}
+  }finally{await ctx.fiber.dispose();if(storage)Object.defineProperty(globalThis,'sessionStorage',storage);else Reflect.deleteProperty(globalThis,'sessionStorage');if(original)Object.defineProperty(globalThis,'window',original);else Reflect.deleteProperty(globalThis,'window')}
  })
 })

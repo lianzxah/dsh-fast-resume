@@ -1,0 +1,31 @@
+# Bilingual-pair consistency record for assistant-acceptance.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write plugins/fast-resume/docs/assistant-acceptance.md
+/:
+  en: 3157830f8209b178
+  zh: eeddc5d7b0f99aa3
+/ai-assistant-acceptance:
+  en: cc5be1262f0d0fd9
+  zh: df5dcd67e45b5ad0
+/ai-assistant-acceptance/summary:
+  en: 45f98bff476505d2
+  zh: 5c04121fc3540ed1
+/ai-assistant-acceptance/table-of-contents:
+  en: 6d33059ae419a236
+  zh: 903b3dd195cf512c
+/ai-assistant-acceptance/business-outcomes:
+  en: 07f161d9b2a41f89
+  zh: 29cee9c17a41f08e
+/ai-assistant-acceptance/automated-acceptance:
+  en: b6af818c0788a365
+  zh: 065af0554436c1c4
+/ai-assistant-acceptance/replay-limits:
+  en: af67fccbda4980fa
+  zh: ad5ab3b582e2eb65
+/ai-assistant-acceptance/unexecuted-checks:
+  en: 9e950fb549b1899e
+  zh: 059d2a6f1d06a350
+/ai-assistant-acceptance/dev-note:
+  en: 803b1971e7bd75a0
+  zh: 4e208e5bb09f3fad

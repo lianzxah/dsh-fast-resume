@@ -5,6 +5,8 @@ import { mkdtemp, readFile, writeFile, stat, readdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import assert from 'node:assert/strict'
+import { rm } from 'node:fs/promises'
+import { verifyAssistantScenarios } from './verify-assistant-scenarios.mjs'
 
 const run = promisify(execFile)
 const cli = process.env.DSH_TEST_CLI
@@ -15,6 +17,7 @@ if (!cli || !replay || !process.argv[2]) {
 const tarball = resolve(process.argv[2])
 const installOptions = [...(process.argv.includes('--offline') ? ['--offline'] : []), ...(process.env.DSH_TEST_REGISTRY ? [`--registry=${process.env.DSH_TEST_REGISTRY}`] : [])]
 const root = await mkdtemp(join(tmpdir(), 'fast-resume-harness-'))
+try {
 const env = { ...process.env, DSH_HOME: join(root, 'home'), DSH_AGENTS_HOME: join(root, 'agents'), DSH_TELEMETRY_DISABLED: '1', DSH_TOOLS_MODE: 'native' }
 // Model selection comes only from the test profile; ambient credentials are unnecessary.
 delete env.DEEPSEEK_API_KEY
@@ -54,6 +57,11 @@ const script = [
   tool('resume_apply', { id, proposalId, requestId: 'offline-apply' }, 4),
   tool('resume_export', { id, expectedRevision: 2, format: 'json' }, 5),
   tool('resume_read', { id }, 6),
+  tool('resume_context', { intent: 'resolve' }, 7),
+  tool('resume_context', { intent: 'select', id, expectedRevision: 2, requestId: 'offline-selection' }, 8),
+  tool('resume_context', { intent: 'resolve' }, 9),
+  tool('resume_edit', { id, expectedRevision: 2, requestId: 'offline-edit', operationsJson: JSON.stringify([{ type: 'text.replace', elementId, content: text + ' — atomic' }]), summary: 'Atomic edit' }, 10),
+  tool('resume_export', { id, expectedRevision: 3, format: 'json' }, 11),
   finish(finalText),
 ]
 await writeFile(join(root, 'fixture.jsonl'), JSON.stringify({ type: 'session', version: 3, id: 'offline-fixture', createdAt: 200, cwd: root, isSeeded: false, delegationDepth: 0 }) + '\n')
@@ -75,7 +83,7 @@ await writeFile(join(root, 'diagnostics.log'), result.stderr)
 assert.equal(result.stderr.trim(), '', 'Harness emitted unexpected diagnostics')
 const events = result.stdout.trim().split('\n').map(line => JSON.parse(line))
 const results = events.filter(event => event.type === 'tool_result')
-assert.equal(results.length, 6, 'All six normal tool calls must execute')
+assert.equal(results.length, 11, 'Legacy and context tool calls must execute')
 for (const event of results) assert.equal(event.status, 'completed', JSON.stringify(event))
 const exported = results.find(event => event.callId === 'resume-test-call-5')
 assert.ok(exported, 'The JSON export tool result must be logged')
@@ -85,6 +93,22 @@ assert.equal(receipt.dataBase64, undefined, 'Binary output must not enter the mo
 const data = JSON.parse(await readFile(receipt.artifactPath, 'utf8'))
 assert.equal(data.document.pages[0].elements[0].content, text, 'Committed exported content must contain the actual edit')
 assert.ok(result.stdout.includes(finalText), 'The scripted turn must finish')
+const valueOf = event => typeof event.result === 'string' ? JSON.parse(event.result) : event.result
+assert.equal(valueOf(results[6]).context.source,'committed-edit','Coordinated legacy commits bind their actual Session')
+const selected=valueOf(results[7]),resolved=valueOf(results[8])
+assert.equal(selected.state,'bound');assert.equal(selected.context.resumeId,receipt.resumeId)
+assert.equal(selected.context.source,'explicit-tool');assert.equal(selected.revision,2)
+assert.deepEqual(resolved,selected,'A following context call must resolve the explicit selection')
+const contextDirectory=resolve(receipt.artifactPath,'../../contexts-v1')
+const contextFiles=(await readdir(contextDirectory)).filter(name=>name.endsWith('.json'))
+assert.equal(contextFiles.length,1)
+const contextRecord=JSON.parse(await readFile(join(contextDirectory,contextFiles[0]),'utf8'))
+assert.equal(contextRecord.context.resumeId,selected.context.resumeId)
+assert.equal(contextRecord.context.source,'committed-edit')
+const atomic=valueOf(results[9]);assert.equal(atomic.schemaVersion,1);assert.equal(atomic.sessionId,selected.context.sessionId);assert.equal(atomic.receipt.revision,3);assert.equal(valueOf(results[10]).revision,3)
+const document=JSON.parse(await readFile(resolve(receipt.artifactPath,`../../${receipt.resumeId}.json`),'utf8'))
+assert.equal(document.revision,3,'One atomic edit adds exactly one revision')
+assert.equal(document.document.pages[0].elements[0].content,text + ' — atomic')
 const removed = await invoke(['plugin', '--profile', 'headless', 'remove', 'dsh-fast-resume'])
 await writeFile(join(root, 'uninstall.log'), removed.stdout + removed.stderr)
 assert.ok((await stat(receipt.artifactPath)).size > 0, 'Uninstall must retain resume exports')
@@ -111,7 +135,8 @@ const initialLog=recordedLogs.find(rows=>rows.some(row=>row.type==='assistant/me
 assert.ok(initialLog)
 function resumeToolNames(header){assert.ok(Array.isArray(header.data.header.tools));return header.data.header.tools.map(tool=>tool.name).filter(name=>name.startsWith('resume_')).sort()}
 const initialHeader=initialLog.find(row=>row.type==='request/header');assert.ok(initialHeader)
-assert.deepEqual(resumeToolNames(initialHeader),['resume_apply','resume_create','resume_export','resume_history','resume_list','resume_propose','resume_read','resume_restore','resume_revert'])
+assert.equal(initialLog.find(row=>row.type==='session').id,selected.context.sessionId,'Context must use the logged real Session identity')
+assert.deepEqual(resumeToolNames(initialHeader),['resume_apply','resume_context','resume_create','resume_edit','resume_export','resume_history','resume_list','resume_propose','resume_read','resume_restore','resume_revert'])
 const disabledLog=recordedLogs.find(rows=>rows.some(row=>row.type==='assistant/message'&&JSON.stringify(row.data).includes(disabledText)))
 assert.ok(disabledLog,'The disabled turn must be persisted')
 const headers=disabledLog.filter(row=>row.type==='request/header')
@@ -125,9 +150,15 @@ const resumedResults=resumed.stdout.trim().split('\n').map(JSON.parse).filter(ev
 assert.equal(resumedResults.length,1)
 assert.equal(resumedResults[0].status,'completed')
 const retained=typeof resumedResults[0].result==='string'?JSON.parse(resumedResults[0].result):resumedResults[0].result
-assert.equal(retained.revision,2)
-assert.equal(retained.element.content,text)
+assert.equal(retained.revision,3)
+assert.equal(retained.element.content,text + ' — atomic')
 assert.ok(resumed.stdout.includes('REINSTALLED_RESUME_READ_COMPLETE'))
 await writeFile(join(root,'reinstalled-output.jsonl'),resumed.stdout)
 await writeFile(join(root, 'verification.json'), JSON.stringify({ provider: 'scripted-test', liveModel: false, normalToolCalls: results.length, revision: receipt.revision, artifactPath: receipt.artifactPath, uninstallRetainedData: true, reinstalledRead:true, disabledToolsAbsent:true, reenabledRead:true }, null, 2) + '\n')
-process.stdout.write(`PASS: packed plugin install, six logged Session tools, committed JSON, uninstall/reinstall retention and disable/re-enable\nEvidence: ${root}\nThis scripted provider is not live-model optimization evidence.\n`)
+process.stdout.write(`PASS: packed plugin install, eleven logged legacy/context/atomic-edit calls, committed JSON, uninstall/reinstall retention and disable/re-enable\nEvidence: ${root}\nThis scripted provider is not live-model optimization evidence.\n`)
+
+await verifyAssistantScenarios({ root, invoke, replay, mode: 'scripted' })
+} finally {
+ if(process.env.DSH_TEST_KEEP === '1')console.log('Retained isolated evidence:',root)
+ else await rm(root,{recursive:true,force:true})
+}

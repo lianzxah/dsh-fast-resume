@@ -79,3 +79,27 @@ describe('serialized draft persistence',()=>{
  })
 
 })
+it('preparation waits for pending recovery writes and an in-flight save before acknowledging clean',async()=>{
+ const backup=deferred<void>(),saved=deferred<ResumeSnapshot>(),entered=deferred<void>();const cleanup=vi.fn(async()=>{})
+ const c=new SaveCoordinator(snapshot(),async()=>{entered.resolve();return saved.promise},()=>{},cleanup)
+ c.edit('draft');c.trackBackup(backup.promise);const saving=c.flush();await entered.promise
+ let ready=false;const preparation=c.prepare().then(value=>{ready=true;return value})
+ saved.resolve(snapshot(rid('a'),rv(2),'draft'));await Promise.resolve();expect(ready).toBe(false);expect(cleanup).not.toHaveBeenCalled()
+ backup.resolve();await saving;expect((await preparation).revision).toBe(2);expect(cleanup).toHaveBeenCalledOnce()
+})
+it('preparation rejects a draft changed while a recovery write is draining',async()=>{const backup=deferred<void>();const c=new SaveCoordinator(snapshot(),async r=>snapshot(rid('a'),rv(2),r.documentJson));c.trackBackup(backup.promise);const preparing=c.prepare();const rejected=expect(preparing).rejects.toThrow('changed during preparation');c.edit('late draft');backup.resolve();await rejected;expect(c.state.draft).toBe('late draft')})
+it('keeps a failed recovery write separate from a successful manual save and subsequent preparation',async()=>{
+ let revision=1;const cleanup=vi.fn(async()=>{}),c=new SaveCoordinator(snapshot(),async request=>snapshot(rid('a'),rv(++revision),request.documentJson),()=>{},cleanup)
+ c.edit('first draft');const failed=deferred<void>();c.trackBackup(failed.promise);failed.reject(Error('Temporary backup failure'))
+ await expect(c.prepare()).rejects.toThrow('Temporary backup failure');await expect(c.flush()).resolves.toBeUndefined();expect(c.state.snapshot.revision).toBe(2);expect(c.state.error).toBeNull();expect(cleanup).toHaveBeenCalledWith(c.state.snapshot,'first draft');expect((await c.prepare()).revision).toBe(2)
+ c.edit('second draft');c.trackBackup(Promise.resolve());await c.flush();expect(c.state.snapshot.revision).toBe(3);expect(cleanup).toHaveBeenCalledTimes(2);expect(c.state.error).toBeNull();expect((await c.prepare()).revision).toBe(3)
+})
+it('does not let an older backup completion clear a newer failure, but accepts a later replacement',async()=>{
+ const c=new SaveCoordinator(snapshot(),async request=>snapshot(rid('a'),rv(2),request.documentJson)),old=deferred<void>(),newer=deferred<void>()
+ c.edit('old');c.trackBackup(old.promise);c.edit('new');c.trackBackup(newer.promise);newer.reject(Error('New backup failure'));await Promise.resolve();old.resolve();await expect(c.prepare()).rejects.toThrow('New backup failure');c.trackBackup(Promise.resolve());expect((await c.prepare()).revision).toBe(2)
+})
+it('does not clear a newer draft backup failure when an older submitted save commits',async()=>{
+ const saved=deferred<ResumeSnapshot>(),cleanup=vi.fn(async()=>{});let calls=0
+ const c=new SaveCoordinator(snapshot(),async request=>++calls===1?saved.promise:Promise.reject(Error('second save unavailable')),()=>{},cleanup)
+ c.edit('submitted');const saving=c.flush();const rejected=expect(saving).rejects.toThrow('second save unavailable');c.edit('new draft');const failed=deferred<void>();c.trackBackup(failed.promise);failed.reject(Error('New recovery failure'));saved.resolve(snapshot(rid('a'),rv(2),'submitted'));await rejected;expect(cleanup).toHaveBeenCalledWith(snapshot(rid('a'),rv(2),'submitted'),'submitted');c.retry();await expect(c.prepare()).rejects.toThrow('New recovery failure')
+})

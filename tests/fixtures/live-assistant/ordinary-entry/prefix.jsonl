@@ -1,0 +1,4 @@
+{"type": "session", "version": 4, "id": "session-e4247fa3-95ad-4da5-b573-7aa6394594d5", "createdAt": 1793516842225, "cwd": "{{cwd}}", "isSeeded": false, "delegationDepth": 0, "agentPreset": "standard"}
+{"type": "permission/preset", "seq": 0, "time": 1793516842228, "data": {"preset": "workspace-write"}}
+{"type": "sandbox/mode", "seq": 1, "time": 1793516842229, "data": {"mode": "workspace-write"}}
+{"type": "approval/policy", "seq": 2, "time": 1793516842229, "data": {"policy": "ask"}}

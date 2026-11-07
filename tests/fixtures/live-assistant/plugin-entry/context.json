@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "context": {
+    "schemaVersion": 1,
+    "sessionId": "f5ebf620-084f-41bc-9eb6-d2845dffbd34",
+    "resumeId": "e6e78198-8c1e-4012-9ed5-b8e717257252",
+    "updatedAt": "2026-11-01T14:01:03.467Z",
+    "source": "editor-entry"
+  },
+  "bindings": [
+    {
+      "requestId": "c7c68949-4c81-4d59-acde-78781c491094:2",
+      "fingerprint": "156ed0bbaa823a73693dc6b53f4d4ce425df0e95315b9a48987cc0f73c8a7c86",
+      "context": {
+        "schemaVersion": 1,
+        "sessionId": "f5ebf620-084f-41bc-9eb6-d2845dffbd34",
+        "resumeId": "e6e78198-8c1e-4012-9ed5-b8e717257252",
+        "updatedAt": "2026-11-01T14:01:03.467Z",
+        "source": "editor-entry"
+      },
+      "revision": 2
+    }
+  ]
+}

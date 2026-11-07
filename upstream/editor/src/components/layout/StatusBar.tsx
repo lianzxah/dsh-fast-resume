@@ -1,9 +1,10 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { Sparkles } from 'lucide-react';
 import { useEditorStore } from '@/store';
 
-export const StatusBar: React.FC = () => {
+export const StatusBar: React.FC<{onAssistant?:()=>void;assistantLabel?:string}> = ({onAssistant,assistantLabel}) => {
+  const reduced=useReducedMotion();
   const { document: doc, activePageIndex, viewport, ui, toggleBottomPanel } = useEditorStore();
 
   return (
@@ -35,12 +36,12 @@ export const StatusBar: React.FC = () => {
       <div className="ml-auto flex items-center gap-3">
         <motion.button
           className="flex items-center gap-1 relative"
-          onClick={toggleBottomPanel}
+          onClick={onAssistant ?? toggleBottomPanel}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           <motion.div
-            animate={{
+            animate={reduced ? {opacity:1,scale:1} : {
               opacity: [0.5, 1, 0.5],
               scale: [1, 1.1, 1],
             }}
@@ -48,8 +49,8 @@ export const StatusBar: React.FC = () => {
           >
             <Sparkles className="w-3 h-3" />
           </motion.div>
-          <span>AI助手</span>
-          {ui.bottomPanelVisible && (
+          <span>{assistantLabel ?? 'AI助手'}</span>
+          {!onAssistant && ui.bottomPanelVisible && (
             <motion.div
               className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-green-400 rounded-full"
               initial={{ scale: 0 }}

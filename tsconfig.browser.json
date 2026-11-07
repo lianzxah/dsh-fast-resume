@@ -32,6 +32,7 @@
     "src/editor/**/*",
     "src/protocol.ts",
     "lib/typert.remote-client.d.ts",
-    "tests/browser/**/*.ts"
+    "tests/browser/**/*.ts",
+    "tests/browser/**/*.tsx"
   ]
 }

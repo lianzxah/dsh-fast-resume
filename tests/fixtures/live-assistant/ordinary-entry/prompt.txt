@@ -1,0 +1,1 @@
+这是普通 Harness 会话唤醒简历助手的隔离 QA 验收。请使用本会话上次编辑的简历，不使用全局最近文档，也不创建新会话。只调用 resume_context、resume_read、resume_edit、resume_export：解析当前目标，读取当前修订，把名为“正文”的 Stage2 Canvas Baseline 文本改为“用清晰表达呈现经验，以可靠执行创造价值”，字号改为15；其他内容、事实、样式、位置、图片和页面保持不变。用 resume_edit 自动应用，导出该提交修订 JSON，再读取目标元素复核。不使用其他工具。完成后报告真实修订，最后写 ORDINARY_ENTRY_LOOP_OK。

@@ -4,6 +4,7 @@ import {createRoot,type Root} from 'react-dom/client'
 import {DndProvider} from 'react-dnd'
 import {HTML5Backend} from 'react-dnd-html5-backend'
 import {afterEach,beforeEach,expect,it,vi} from 'vitest'
+import type {ViewportHandle} from '../../upstream/editor/src/lib/viewport-handoff.ts'
 import {CanvasWorkspace} from '../../upstream/editor/src/components/layout/CanvasWorkspace.tsx'
 import {useEditorStore} from '../../upstream/editor/src/store/editor-store.ts'
 import {getPageMetrics} from '../../upstream/canvas-engine/src/core/page-metrics.ts'
@@ -19,7 +20,7 @@ beforeEach(()=>{
  useEditorStore.setState(initial,true);width=560;height=570;disconnected=false
 })
 afterEach(async()=>{if(root)await act(async()=>root?.unmount());root=undefined;document.body.replaceChildren();vi.restoreAllMocks();vi.unstubAllGlobals()})
-async function mount(direction:'auto'|'standard'|'reversed'='auto'){const container=document.createElement('div');document.body.append(container);root=createRoot(container);await act(async()=>root?.render(React.createElement(DndProvider,{backend:HTML5Backend},React.createElement(CanvasWorkspace,{wheelZoomDirection:direction}))))}
+async function mount(direction:'auto'|'standard'|'reversed'='auto',onViewport?:(handle:ViewportHandle|null)=>void){const container=document.createElement('div');document.body.append(container);root=createRoot(container);await act(async()=>root?.render(React.createElement(DndProvider,{backend:HTML5Backend},React.createElement(CanvasWorkspace,{wheelZoomDirection:direction,onViewport}))))}
 function assertPageFits(){const state=useEditorStore.getState(),page=state.document.pages[state.activePageIndex],metrics=getPageMetrics({...state.document.pageConfig,...page?.config});expect(metrics.widthPx*state.viewport.zoom.level).toBeLessThanOrEqual(width-48+.01);expect(metrics.heightPx*state.viewport.zoom.level).toBeLessThanOrEqual(height-76+.01)}
 function assertWidthFits(){const state=useEditorStore.getState(),page=state.document.pages[state.activePageIndex],metrics=getPageMetrics({...state.document.pageConfig,...page?.config});expect(metrics.widthPx*state.viewport.zoom.level).toBeCloseTo(width-48,5)}
 it('maximizes the initial page width and follows sidebars while keeping long pages vertically scrollable',async()=>{
@@ -82,4 +83,34 @@ it.each([
  await wheel(-upDelta);expect(useEditorStore.getState().viewport.zoom.level).toBeCloseTo(before,6)
  const plain=await wheel(upDelta,false);expect(plain.defaultPrevented).toBe(false);expect(useEditorStore.getState().viewport.zoom.level).toBeCloseTo(before,6)
  expect(useEditorStore.getState().document).toBe(doc);expect(useEditorStore.getState().isDirty).toBe(false)
+})
+
+it.each(['final-fit','already-queued'] as const)('keeps the restored checkpoint anchor after %s and all queued zoom frames',async mode=>{
+ const frames=new Map<number,FrameRequestCallback>();let serial=0
+ vi.stubGlobal('requestAnimationFrame',(callback:FrameRequestCallback)=>{frames.set(++serial,callback);return serial})
+ vi.stubGlobal('cancelAnimationFrame',(id:number)=>{frames.delete(id)})
+ const frame=()=>{const callbacks=[...frames.values()];frames.clear();for(const callback of callbacks)callback(0)}
+ const native=HTMLElement.prototype.getBoundingClientRect
+ vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  if(this.classList.contains('canvas-workspace'))return new DOMRect(0,0,width,height)
+  if(this.classList.contains('shadow-2xl')){
+   const canvas=document.querySelector<HTMLElement>('.canvas-workspace')!,paperWidth=parseFloat(this.style.width),paperHeight=parseFloat(this.style.height)
+   return new DOMRect(24+Math.max(0,(width-48-paperWidth)/2)-canvas.scrollLeft,24-canvas.scrollTop,paperWidth,paperHeight)
+  }
+  return native.call(this)
+ })
+ let handle:ViewportHandle|null=null
+ await mount('auto',value=>{handle=value})
+ const canvas=document.querySelector<HTMLElement>('.canvas-workspace')!
+ canvas.scrollTop=400;const position=handle!.capture();expect(position.anchor!.y).toBeGreaterThan(0)
+ width=320;canvas.scrollTop=0
+ if(mode==='already-queued'){await act(async()=>notify());expect(frames.size).toBeGreaterThan(0)}
+ await act(async()=>{const restored=handle!.restore(position,new AbortController().signal);frame();await restored})
+ assertWidthFits();expect(handle!.capture().anchor!.y).toBeCloseTo(position.anchor!.y,4)
+ await act(async()=>{for(let remaining=0;remaining<3&&frames.size;remaining++)frame()});expect(frames.size).toBe(0)
+ expect(handle!.capture().anchor!.y).toBeCloseTo(position.anchor!.y,4)
+ const restored=handle!.capture()
+ await act(async()=>{useEditorStore.getState().setZoom(1.5);frame()})
+ expect(handle!.capture().anchor!.y).toBeCloseTo(restored.anchor!.y,4)
+ expect(canvas.scrollLeft).toBeGreaterThan(0)
 })

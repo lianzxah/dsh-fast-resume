@@ -55,7 +55,11 @@ describe('atomic document store', () => {
     const proposal=await s.propose({id:d.id,expectedRevision:rv(1),requestId:'propose-1',summary:'Hide a text layer',operationsJson:JSON.stringify([{type:'element.update',elementId:el.id,patch:{visible:false}}])})
     expect((await s.read(d.id)).revision).toBe(1)
     const restarted=new ResumeStore(s.config);const request={id:d.id,proposalId:proposal.id,requestId:'apply-1'}
-    expect(await restarted.apply(request)).toEqual(await restarted.apply(request))
+    expect(await restarted.changeReceipt(d.id,rv(1))).toBeNull()
+    const receipt=await restarted.apply(request);expect(receipt).toEqual(await restarted.apply(request))
+    const path=join(s.config.storageDir,`${d.id}.json`),before=await readFile(path,'utf8')
+    expect(await restarted.changeReceipt(d.id,rv(2))).toEqual(receipt);expect(await restarted.changeReceipt(d.id,rv(3))).toBeNull()
+    expect(await readFile(path,'utf8')).toBe(before)
     await expect(restarted.apply({...request,requestId:'different'})).rejects.toMatchObject({code:'conflict'})
     expect((await restarted.read(d.id)).revision).toBe(2)
   })

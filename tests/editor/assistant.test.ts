@@ -20,4 +20,10 @@ describe('Session association before a logged prompt',()=>{
   await expect(sendResumePrompt({snapshot:snapshot(1),text:'Improve',selectedIds:[]},{createSession:async()=>({sessionId:'configured-later'}),associate:async()=>snapshot(2),prompt:async()=>{throw failure},onSession:id=>{retained=id}})).rejects.toBe(failure)
   expect(retained).toBe('configured-later')
  })
+ it('keeps an explicit conversation Session even when the document has another legacy association',async()=>{
+  const prompt=vi.fn(async()=>({sessionId:'current'})),createSession=vi.fn(),associate=vi.fn(async()=>({...snapshot(2),sessionId:'current'}))
+  await sendResumePrompt({snapshot:{...snapshot(1),sessionId:'other'},sessionId:'current',text:'Improve',selectedIds:[]},{createSession,associate,prompt,onSession:()=>{}})
+  expect(createSession).not.toHaveBeenCalled();expect(associate).toHaveBeenCalledWith('current');expect(prompt).toHaveBeenCalledWith(expect.objectContaining({sessionId:'current',revision:2}))
+ })
+
 })

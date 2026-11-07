@@ -33,7 +33,7 @@ async function fillTitle(title:string){const input=document.querySelector('[role
 describe('sandboxed document forms',()=>{
  it.each(['getItem','setItem'] as const)('opens with a visible recovery limitation when tab storage %s fails',async method=>{
   const storage=vi.spyOn(Storage.prototype,method).mockImplementation(()=>{throw new DOMException('Storage blocked','SecurityError')})
-  const frame=document.createElement('iframe'),assets:EditorAssets={html:'"__FAST_RESUME_BOOTSTRAP__"',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',refreshIntervalMs:2000}
+  const frame=document.createElement('iframe'),assets:EditorAssets={html:'"__FAST_RESUME_BOOTSTRAP__"',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',maxAssistantCheckpointBytes:67108864,editorPollIntervalMs:1000,refreshIntervalMs:2000}
   let dispose=()=>{};const{port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000)
   try{
    dispose=connectFrame(frame,assets,'en','editor',async()=>null,vi.fn())
@@ -47,12 +47,12 @@ describe('sandboxed document forms',()=>{
  })
  it('retains the parent tab owner across frame reconnection while separating editor instances',()=>{
   const key='fast-resume:editor-owner:v1',previous=sessionStorage.getItem(key),frame=document.createElement('iframe')
-  const assets:EditorAssets={html:'"__FAST_RESUME_BOOTSTRAP__"',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'reversed',refreshIntervalMs:2000}
+  const assets:EditorAssets={html:'"__FAST_RESUME_BOOTSTRAP__"',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'reversed',maxAssistantCheckpointBytes:67108864,editorPollIntervalMs:1000,refreshIntervalMs:2000}
   let dispose=()=>{}
   try{dispose=connectFrame(frame,assets,'en','editor',async()=>null,vi.fn());const first=JSON.parse(frame.srcdoc);dispose();dispose=connectFrame(frame,assets,'en','editor',async()=>null,vi.fn());const second=JSON.parse(frame.srcdoc);expect(second.recoveryOwnerId).toBe(first.recoveryOwnerId);expect(second.nonce).not.toBe(first.nonce);expect(first.wheelZoomDirection).toBe('reversed');expect(second.wheelZoomDirection).toBe('reversed')}finally{dispose();if(previous===null)sessionStorage.removeItem(key);else sessionStorage.setItem(key,previous)}
  })
  it('permits interactive form submissions while retaining an opaque origin',()=>{
-  const markup=renderToStaticMarkup(React.createElement(EditorFrame,{loadAssets:async()=>{throw Error('Not mounted')},connect:()=>()=>{},t:key=>key,usePanelInfo:()=>{throw Error('Not rendered')},useWorkspaces:()=>{throw Error('Not rendered')},useWorkspaceAccess:()=>false}))
+  const markup=renderToStaticMarkup(React.createElement(EditorFrame,{loadAssets:async()=>{throw Error('Not mounted')},connect:()=>()=>{},t:key=>key,usePanelInfo:()=>{throw Error('Not rendered')},useWorkspaces:()=>{throw Error('Not rendered')},useWorkspaceAccess:()=>false,useSessions:()=>{throw Error('Unused')},useSessionStatus:()=>{throw Error('Unused')},useSessionRetainInfo:()=>{throw Error('Unused')},useSessionAccess:()=>true}))
   const container=document.createElement('div');container.innerHTML=markup
   const permissions=container.querySelector('iframe')?.getAttribute('sandbox')?.split(' ')
   expect(permissions).toContain('allow-forms')
@@ -60,7 +60,7 @@ describe('sandboxed document forms',()=>{
  })
  it.each(['create','rename'] as const)('submits the %s title through the document API',async operation=>{
   const {port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000)
-  const api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',refreshIntervalMs:2000})
+  const api=createEditorApi(bridge,{nonce:'test',recoveryOwnerId:'test',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',maxAssistantCheckpointBytes:67108864,editorPollIntervalMs:1000,refreshIntervalMs:2000})
   const summary={id:rid('resume'),title:'Before',revision:rv(3),pageCount:1,updatedAt:'2026-10-18T00:00:00Z'}
   vi.spyOn(api,'list').mockResolvedValue(operation==='rename'?[summary]:[])
   const create=vi.spyOn(api,'create').mockRejectedValue(Error('Create reached API'))
@@ -85,7 +85,7 @@ describe('resume deletion confirmation',()=>{
  const summary={id:rid('delete-resume'),title:'Synthetic resume — a complete document title that stays visible',revision:rv(7),pageCount:2,updatedAt:'2026-10-18T00:00:00Z'}
  function setup(){
   const {port1,port2}=new MessageChannel(),bridge=new PortBridge(port1,1000)
-  const api=createEditorApi(bridge,{nonce:'delete',recoveryOwnerId:'delete',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',refreshIntervalMs:2000})
+  const api=createEditorApi(bridge,{nonce:'delete',recoveryOwnerId:'delete',recoveryOwnerPersistent:true,mode:'editor',locale:'en',autosaveDelayMs:2000,maxImportBytes:100000,maxDocumentBytes:100000,frameConnectTimeoutMs:15000,bridgeTimeoutMs:45000,rendererPollIntervalMs:1000,wheelZoomDirection:'auto',maxAssistantCheckpointBytes:67108864,editorPollIntervalMs:1000,refreshIntervalMs:2000})
   vi.spyOn(api,'list').mockResolvedValue([summary])
   const container=document.createElement('div');document.body.append(container);root=createRoot(container)
   return {api,dispose:()=>{bridge.close();port2.close()}}

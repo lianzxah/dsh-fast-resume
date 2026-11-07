@@ -24,11 +24,14 @@
   en: 4660775b45deb07f
   zh: 35c585f082500934
 /fast-resume-for-deepseek-harness/screenshots/visual-version-history:
-  en: 22d607524402bbcf
-  zh: 86f9fd69cfcde736
+  en: d9b80cac89bca2d6
+  zh: 6b9f59956eebb5d4
+/fast-resume-for-deepseek-harness/screenshots/conversation-and-change-review:
+  en: bb4eecf7d2ccdcf1
+  zh: 8bd2e67b3d2bdbc4
 /fast-resume-for-deepseek-harness/installation:
-  en: 68ba02b824177205
-  zh: dba6afcc3cffe881
+  en: 084026c1a2a5a215
+  zh: dfa37c2a875a36bc
 /fast-resume-for-deepseek-harness/usage-examples:
   en: b996164cc1df0a33
   zh: d82b38ff48c82dc0
@@ -36,8 +39,8 @@
   en: 9e46a16583f58912
   zh: 59d650f3bf2cc991
 /fast-resume-for-deepseek-harness/usage-examples/2-refine-it-with-your-harness-agent:
-  en: 339aa2c53b3105f7
-  zh: e719856ed86ce725
+  en: 124729c5d3793344
+  zh: 7647973c586b975f
 /fast-resume-for-deepseek-harness/usage-examples/3-save-a-milestone-and-compare-versions:
   en: b2e625fe3332a498
   zh: 522070be7c23f575
@@ -45,20 +48,20 @@
   en: 87d84c3a33e0602f
   zh: e5ff6e42bc2e20c2
 /fast-resume-for-deepseek-harness/configuration-and-storage:
-  en: 46932ba7d9d5ed6d
-  zh: cb941a15d925d7d0
+  en: 2380d476d3e63ab8
+  zh: 2600e95d9d2b7fa8
 /fast-resume-for-deepseek-harness/development:
-  en: 36cfa6c4356e6076
-  zh: b26241869d2d271d
+  en: b84977e48b6432a4
+  zh: 43837de1dbd8bca2
 /fast-resume-for-deepseek-harness/development/local-harness-development:
   en: 07f1ad98941f2835
   zh: 36fae785493533f0
 /fast-resume-for-deepseek-harness/model-experience:
-  en: 32409430a3c119d3
-  zh: 378adcd899050001
+  en: c6f62758a77b5387
+  zh: 54e07b460dae748c
 /fast-resume-for-deepseek-harness/limitations-and-license:
-  en: ca2bcb0a00548d85
-  zh: 5688e422c8f7feb3
+  en: 0d5e0e9698488b4e
+  zh: a03e71d9b9c47ccd
 /fast-resume-for-deepseek-harness/limitations-and-license/dev-note:
   en: a7dc5af1b32d54d3
   zh: 80f27f96e36ed7a6
